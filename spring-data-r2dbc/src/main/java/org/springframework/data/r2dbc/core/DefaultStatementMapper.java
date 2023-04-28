@@ -15,9 +15,6 @@
  */
 package org.springframework.data.r2dbc.core;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.r2dbc.convert.R2dbcConverter;
 import org.springframework.data.r2dbc.dialect.R2dbcDialect;
@@ -38,6 +35,10 @@ import org.springframework.r2dbc.core.binding.BindMarkers;
 import org.springframework.r2dbc.core.binding.BindTarget;
 import org.springframework.r2dbc.core.binding.Bindings;
 import org.springframework.util.Assert;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * Default {@link StatementMapper} implementation.
@@ -98,18 +99,43 @@ class DefaultStatementMapper implements StatementMapper {
 		}
 
 		SelectBuilder.SelectFromAndJoin selectBuilder = selectAndFrom.from(table);
+		if (Objects.nonNull(selectSpec.getJoins()) && selectSpec.getJoins().notEmpty()) {
+			for (Join join : selectSpec.getJoins().getJoins()) {
+				selectBuilder.join(join.getJoinTable(), join.getType()).on(join.getOn()).end();
+			}
+		}
+		if (Objects.nonNull(selectSpec.getGroups()) && selectSpec.getGroups().notEmpty()) {
+			List<GroupByField> groupBy = this.updateMapper.getMappedGroupBy(table, selectSpec.getGroups().getGroups(), entity);
+			selectBuilder.groupBy(groupBy);
+		}
 
 		BindMarkers bindMarkers = this.dialect.getBindMarkersFactory().create();
 		Bindings bindings = Bindings.empty();
-		CriteriaDefinition criteria = selectSpec.getCriteria();
-
-		if (criteria != null && !criteria.isEmpty()) {
-
-			BoundCondition mappedObject = this.updateMapper.getMappedObject(bindMarkers, criteria, table, entity);
-
-			bindings = mappedObject.getBindings();
-			selectBuilder.where(mappedObject.getCondition());
+		List<BoundCondition> mappedObjects = new ArrayList<>();
+		if (selectSpec.getCriteria() != null && !selectSpec.getCriteria().isEmpty()) {
+			mappedObjects.add(this.updateMapper.getMappedObject(bindMarkers, selectSpec.getCriteria(), table, entity));
 		}
+		if (Objects.nonNull(selectSpec.getJoins()) && selectSpec.getJoins().notEmpty()) {
+			for (Join join : selectSpec.getJoins().getJoins()) {
+				if (join.getCriteria().isEmpty()) {
+					continue;
+				}
+				mappedObjects.add(this.updateMapper.getMappedObject(bindMarkers, join.getCriteria(), (Table) join.getJoinTable(), entity));
+			}
+		}
+		if (!mappedObjects.isEmpty()) {
+			Condition conditions = null;
+			for (BoundCondition mappedObject : mappedObjects) {
+				bindings = bindings.and(mappedObject.getBindings());
+				if (conditions == null) {
+					conditions = mappedObject.getCondition();
+				} else {
+					conditions = conditions.and(mappedObject.getCondition());
+				}
+			}
+			selectBuilder.where(conditions);
+		}
+
 
 		if (selectSpec.getSort().isSorted()) {
 

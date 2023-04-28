@@ -15,19 +15,13 @@
  */
 package org.springframework.data.relational.core.query;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.relational.core.sql.SqlIdentifier;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Query object representing {@link Criteria}, columns, {@link Sort}, and limit/offset for a SQL query. {@link Query} is
@@ -46,6 +40,12 @@ public class Query {
 	private final @Nullable CriteriaDefinition criteria;
 
 	private final List<SqlIdentifier> columns;
+
+	@Nullable
+	private final Joins joins;
+
+	@Nullable
+	private final Groups groups;
 	private final Sort sort;
 	private final int limit;
 	private final long offset;
@@ -66,16 +66,19 @@ public class Query {
 	 * @param criteria must not be {@literal null}.
 	 */
 	private Query(@Nullable CriteriaDefinition criteria) {
-		this(criteria, Collections.emptyList(), Sort.unsorted(), NO_LIMIT, NO_LIMIT);
+		this(criteria, Collections.emptyList(), Sort.unsorted(), NO_LIMIT, NO_LIMIT, null, null);
 	}
 
-	private Query(@Nullable CriteriaDefinition criteria, List<SqlIdentifier> columns, Sort sort, int limit, long offset) {
+	private Query(@Nullable CriteriaDefinition criteria, List<SqlIdentifier> columns, Sort sort,
+				  int limit, long offset, @Nullable Joins joins, @Nullable Groups groups) {
 
 		this.criteria = criteria;
 		this.columns = columns;
 		this.sort = sort;
 		this.limit = limit;
 		this.offset = offset;
+		this.joins = joins;
+		this.groups = groups;
 	}
 
 	/**
@@ -139,7 +142,7 @@ public class Query {
 
 		List<SqlIdentifier> newColumns = new ArrayList<>(this.columns);
 		newColumns.addAll(columns);
-		return new Query(this.criteria, newColumns, this.sort, this.limit, offset);
+		return new Query(this.criteria, newColumns, this.sort, this.limit, offset,this.joins,this.groups);
 	}
 
 	/**
@@ -149,7 +152,7 @@ public class Query {
 	 * @return a new {@link Query} object containing the former settings with {@code offset} applied.
 	 */
 	public Query offset(long offset) {
-		return new Query(this.criteria, this.columns, this.sort, this.limit, offset);
+		return new Query(this.criteria, this.columns, this.sort, this.limit, offset,this.joins,this.groups);
 	}
 
 	/**
@@ -159,7 +162,7 @@ public class Query {
 	 * @return a new {@link Query} object containing the former settings with {@code limit} applied.
 	 */
 	public Query limit(int limit) {
-		return new Query(this.criteria, this.columns, this.sort, limit, this.offset);
+		return new Query(this.criteria, this.columns, this.sort, limit, this.offset,this.joins,this.groups);
 	}
 
 	/**
@@ -170,15 +173,36 @@ public class Query {
 	 * @return a new {@link Query} object containing the former settings with {@link Pageable} applied.
 	 */
 	public Query with(Pageable pageable) {
-
 		if (pageable.isUnpaged()) {
 			return this;
 		}
 
 		assertNoCaseSort(pageable.getSort());
 
+		if (pageable instanceof PageExtender pageExtender && pageExtender.getBoundary().notEmpty()) {
+			CriteriaDefinition boundaryCriteria = pageExtender.getBoundary().toCriteria();
+			return new Query(CriteriaDefinition.from(this.criteria, boundaryCriteria), this.columns, this.sort.and(pageable.getSort()), pageable.getPageSize(),
+					pageable.getOffset(), this.joins, this.groups);
+		}
+
 		return new Query(this.criteria, this.columns, this.sort.and(pageable.getSort()), pageable.getPageSize(),
-				pageable.getOffset());
+				pageable.getOffset(), this.joins, this.groups);
+	}
+
+	public Query withBoundary(Boundary boundary) {
+		if (!boundary.notEmpty()) {
+			return this;
+		}
+		CriteriaDefinition boundaryCriteria = boundary.toCriteria();
+		return new Query(CriteriaDefinition.from(this.criteria, boundaryCriteria), this.columns, this.sort, limit, offset, this.joins, this.groups);
+	}
+
+	public Query groupBy(Groups groups) {
+		return new Query(this.criteria, this.columns, this.sort.and(sort), this.limit, this.offset, this.joins, groups);
+	}
+
+	public Query join(Joins joins) {
+		return new Query(this.criteria, this.columns, this.sort.and(sort), this.limit, this.offset, joins, this.groups);
 	}
 
 	/**
@@ -197,7 +221,7 @@ public class Query {
 
 		assertNoCaseSort(sort);
 
-		return new Query(this.criteria, this.columns, this.sort.and(sort), this.limit, this.offset);
+		return new Query(this.criteria, this.columns, this.sort.and(sort), this.limit, this.offset,this.joins,this.groups);
 	}
 
 	/**
@@ -259,6 +283,23 @@ public class Query {
 	 */
 	public boolean isLimited() {
 		return getLimit() != NO_LIMIT;
+	}
+
+
+	public boolean hasGroups() {
+		return this.groups != null && this.groups.notEmpty();
+	}
+
+	public Groups getGroups() {
+		return this.groups;
+	}
+
+	public boolean hasJoin() {
+		return this.joins != null && this.joins.notEmpty();
+	}
+
+	public Joins getJoins() {
+		return this.joins;
 	}
 
 	private static void assertNoCaseSort(Sort sort) {

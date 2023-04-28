@@ -18,18 +18,6 @@ package org.springframework.data.r2dbc.core;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.Row;
 import io.r2dbc.spi.RowMetadata;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
-import java.beans.FeatureDescriptor;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
 import org.reactivestreams.Publisher;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
@@ -61,11 +49,7 @@ import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.CriteriaDefinition;
 import org.springframework.data.relational.core.query.Query;
 import org.springframework.data.relational.core.query.Update;
-import org.springframework.data.relational.core.sql.Expression;
-import org.springframework.data.relational.core.sql.Expressions;
-import org.springframework.data.relational.core.sql.Functions;
-import org.springframework.data.relational.core.sql.SqlIdentifier;
-import org.springframework.data.relational.core.sql.Table;
+import org.springframework.data.relational.core.sql.*;
 import org.springframework.data.util.ProxyUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.r2dbc.core.DatabaseClient;
@@ -73,6 +57,17 @@ import org.springframework.r2dbc.core.Parameter;
 import org.springframework.r2dbc.core.PreparedOperation;
 import org.springframework.r2dbc.core.RowsFetchSpec;
 import org.springframework.util.Assert;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.beans.FeatureDescriptor;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of {@link R2dbcEntityOperations}. It simplifies the use of Reactive R2DBC usage through entities and
@@ -265,6 +260,13 @@ public class R2dbcEntityTemplate implements R2dbcEntityOperations, BeanFactoryAw
 			selectSpec = criteria.map(selectSpec::withCriteria).orElse(selectSpec);
 		}
 
+		if (query.hasGroups()) {
+			selectSpec = selectSpec.withGroupBy(query.getGroups());
+		}
+		if (query.hasJoin()) {
+			selectSpec = selectSpec.withJoin(query.getJoins());
+		}
+
 		PreparedOperation<?> operation = statementMapper.getMappedObject(selectSpec);
 
 		return this.databaseClient.sql(operation) //
@@ -349,6 +351,13 @@ public class R2dbcEntityTemplate implements R2dbcEntityOperations, BeanFactoryAw
 
 		if (query.getOffset() > 0) {
 			selectSpec = selectSpec.offset(query.getOffset());
+		}
+
+		if (query.hasGroups()) {
+			selectSpec = selectSpec.withGroupBy(query.getGroups());
+		}
+		if (query.hasJoin()) {
+			selectSpec = selectSpec.withJoin(query.getJoins());
 		}
 
 		if (query.isSorted()) {

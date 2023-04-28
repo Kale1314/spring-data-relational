@@ -15,15 +15,17 @@
  */
 package org.springframework.data.relational.core.sql;
 
+import org.springframework.data.relational.core.query.CriteriaDefinition;
+
 /**
  * {@link Segment} for a {@code JOIN} declaration.
  * <p>
  * Renders to: {@code JOIN
  *
-<table>
+ * <table>
  *  ON <condition>}.
  * </p>
- * 
+ *
  * @author Mark Paluch
  * @since 1.1
  */
@@ -33,13 +35,26 @@ public class Join extends AbstractSegment {
 	private final TableLike joinTable;
 	private final Condition on;
 
+	private final CriteriaDefinition criteria;
+
 	Join(JoinType type, TableLike joinTable, Condition on) {
+		this(type, joinTable, on, CriteriaDefinition.empty());
+	}
 
+	Join(JoinType type, TableLike joinTable, Condition on, CriteriaDefinition criteria) {
 		super(joinTable, on);
-
 		this.joinTable = joinTable;
 		this.type = type;
 		this.on = on;
+		this.criteria = criteria;
+	}
+
+	public static Join by(JoinType type, TableLike joinTable, Condition on) {
+		return new Join(type, joinTable, on);
+	}
+
+	public Join withCriteria(CriteriaDefinition criteria) {
+		return new Join(this.type, this.joinTable, this.on, criteria);
 	}
 
 	/**
@@ -61,6 +76,10 @@ public class Join extends AbstractSegment {
 	 */
 	public Condition getOn() {
 		return on;
+	}
+
+	public CriteriaDefinition getCriteria() {
+		return this.criteria;
 	}
 
 	@Override

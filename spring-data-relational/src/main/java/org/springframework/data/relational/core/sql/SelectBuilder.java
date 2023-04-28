@@ -211,10 +211,14 @@ public interface SelectBuilder {
 		SelectFromAndOrderBy from(Collection<? extends TableLike> tables);
 	}
 
+	interface SelectGroupBy extends SelectFrom, SelectOrdered, SelectLimitOffset, SelectLock, BuildSelect {
+		SelectFromAndOrderBy groupBy(Collection<? extends GroupByField> groupByFields);
+	}
+
 	/**
 	 * Builder exposing {@code FROM}, {@code JOIN}, {@code WHERE}, {@code LIMIT/OFFSET} and {@code LOCK} methods.
 	 */
-	interface SelectFromAndOrderBy extends SelectFrom, SelectOrdered, SelectLimitOffset, SelectLock, BuildSelect {
+	interface SelectFromAndOrderBy extends SelectGroupBy, SelectFrom, SelectOrdered, SelectLimitOffset, SelectLock, BuildSelect {
 
 		@Override
 		SelectFromAndOrderBy limitOffset(long limit, long offset);
@@ -348,6 +352,9 @@ public interface SelectBuilder {
 		 * @return {@code this} builder.
 		 */
 		SelectFromAndJoin offset(long offset);
+
+
+		SelectFromAndJoin end();
 	}
 
 	/**

@@ -15,13 +15,7 @@
  */
 package org.springframework.data.relational.core.sql.render;
 
-import org.springframework.data.relational.core.sql.From;
-import org.springframework.data.relational.core.sql.Join;
-import org.springframework.data.relational.core.sql.OrderByField;
-import org.springframework.data.relational.core.sql.Select;
-import org.springframework.data.relational.core.sql.SelectList;
-import org.springframework.data.relational.core.sql.Visitable;
-import org.springframework.data.relational.core.sql.Where;
+import org.springframework.data.relational.core.sql.*;
 
 /**
  * {@link PartRenderer} for {@link Select} statements.
@@ -44,6 +38,7 @@ class SelectStatementVisitor extends DelegatingVisitor implements PartRenderer {
 
 	private SelectListVisitor selectListVisitor;
 	private OrderByClauseVisitor orderByClauseVisitor;
+	private GroupByClauseVisitor groupByClauseVisitor;
 	private FromClauseVisitor fromClauseVisitor;
 	private WhereClauseVisitor whereClauseVisitor;
 
@@ -53,6 +48,7 @@ class SelectStatementVisitor extends DelegatingVisitor implements PartRenderer {
 		this.selectRenderContext = context.getSelectRenderContext();
 		this.selectListVisitor = new SelectListVisitor(context, selectList::append);
 		this.orderByClauseVisitor = new OrderByClauseVisitor(context);
+		this.groupByClauseVisitor = new GroupByClauseVisitor(context);
 		this.fromClauseVisitor = new FromClauseVisitor(context, it -> {
 
 			if (from.length() != 0) {
@@ -70,6 +66,10 @@ class SelectStatementVisitor extends DelegatingVisitor implements PartRenderer {
 
 		if (segment instanceof SelectList) {
 			return Delegation.delegateTo(selectListVisitor);
+		}
+
+		if (segment instanceof GroupByField) {
+			return Delegation.delegateTo(groupByClauseVisitor);
 		}
 
 		if (segment instanceof OrderByField) {
@@ -126,6 +126,11 @@ class SelectStatementVisitor extends DelegatingVisitor implements PartRenderer {
 
 			if (where.length() != 0) {
 				builder.append(" WHERE ").append(where);
+			}
+
+			CharSequence groupBy = groupByClauseVisitor.getRenderedPart();
+			if (groupBy.length() != 0) {
+				builder.append(" GROUP BY ").append(groupBy);
 			}
 
 			CharSequence orderBy = orderByClauseVisitor.getRenderedPart();

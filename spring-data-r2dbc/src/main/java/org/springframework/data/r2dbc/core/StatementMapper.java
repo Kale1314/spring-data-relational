@@ -15,17 +15,8 @@
  */
 package org.springframework.data.r2dbc.core;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-
+import org.springframework.data.domain.Groups;
+import org.springframework.data.domain.Joins;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.convert.R2dbcConverter;
@@ -41,6 +32,11 @@ import org.springframework.lang.Nullable;
 import org.springframework.r2dbc.core.Parameter;
 import org.springframework.r2dbc.core.PreparedOperation;
 import org.springframework.util.Assert;
+
+import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * Mapper for statement specifications to {@link PreparedOperation}. Statement mapping applies a
@@ -231,8 +227,15 @@ public interface StatementMapper {
 		private final boolean distinct;
 		private final LockMode lockMode;
 
+		@Nullable
+		private final Joins joins;
+
+		@Nullable
+		private final Groups groups;
+
+
 		protected SelectSpec(Table table, List<String> projectedFields, List<Expression> selectList,
-				@Nullable CriteriaDefinition criteria, Sort sort, int limit, long offset, boolean distinct, LockMode lockMode) {
+							 @Nullable CriteriaDefinition criteria, Sort sort, int limit, long offset, boolean distinct, LockMode lockMode, @Nullable Joins joins, @Nullable Groups groups) {
 			this.table = table;
 			this.projectedFields = projectedFields;
 			this.selectList = selectList;
@@ -242,6 +245,8 @@ public interface StatementMapper {
 			this.limit = limit;
 			this.distinct = distinct;
 			this.lockMode = lockMode;
+			this.joins = joins;
+			this.groups = groups;
 		}
 
 		/**
@@ -266,7 +271,7 @@ public interface StatementMapper {
 			List<String> projectedFields = Collections.emptyList();
 			List<Expression> selectList = Collections.emptyList();
 			return new SelectSpec(Table.create(table), projectedFields, selectList, Criteria.empty(), Sort.unsorted(), -1, -1,
-					false, null);
+					false, null, null, null);
 		}
 
 		public SelectSpec doWithTable(BiFunction<Table, SelectSpec, SelectSpec> function) {
@@ -308,7 +313,7 @@ public interface StatementMapper {
 			selectList.addAll(Arrays.asList(expressions));
 
 			return new SelectSpec(this.table, projectedFields, selectList, this.criteria, this.sort, this.limit, this.offset,
-					this.distinct, this.lockMode);
+					this.distinct, this.lockMode, this.joins, this.groups);
 		}
 
 		/**
@@ -324,7 +329,7 @@ public interface StatementMapper {
 			selectList.addAll(projectedFields);
 
 			return new SelectSpec(this.table, this.projectedFields, selectList, this.criteria, this.sort, this.limit,
-					this.offset, this.distinct, this.lockMode);
+					this.offset, this.distinct, this.lockMode, this.joins, this.groups);
 		}
 
 		/**
@@ -335,7 +340,7 @@ public interface StatementMapper {
 		 */
 		public SelectSpec withCriteria(CriteriaDefinition criteria) {
 			return new SelectSpec(this.table, this.projectedFields, this.selectList, criteria, this.sort, this.limit,
-					this.offset, this.distinct, this.lockMode);
+					this.offset, this.distinct, this.lockMode, this.joins, this.groups);
 		}
 
 		/**
@@ -348,11 +353,30 @@ public interface StatementMapper {
 
 			if (sort.isSorted()) {
 				return new SelectSpec(this.table, this.projectedFields, this.selectList, this.criteria, sort, this.limit,
-						this.offset, this.distinct, this.lockMode);
+						this.offset, this.distinct, this.lockMode, this.joins, this.groups);
 			}
 
 			return new SelectSpec(this.table, this.projectedFields, this.selectList, this.criteria, this.sort, this.limit,
-					this.offset, this.distinct, this.lockMode);
+					this.offset, this.distinct, this.lockMode, this.joins, this.groups);
+		}
+
+		public SelectSpec withGroupBy(Groups groups) {
+			if (groups.notEmpty()) {
+				return new SelectSpec(this.table, this.projectedFields, this.selectList, this.criteria, sort, this.limit,
+						this.offset, this.distinct, this.lockMode, this.joins, groups);
+			}
+			return new SelectSpec(this.table, this.projectedFields, this.selectList, this.criteria, this.sort, this.limit,
+					this.offset, this.distinct, this.lockMode, this.joins, this.groups);
+		}
+
+		public SelectSpec withJoin(Joins joins) {
+			if (joins.notEmpty()) {
+				return new SelectSpec(this.table, this.projectedFields, this.selectList, this.criteria, sort, this.limit,
+						this.offset, this.distinct, this.lockMode, joins, groups);
+			}
+
+			return new SelectSpec(this.table, this.projectedFields, this.selectList, this.criteria, this.sort, this.limit,
+					this.offset, this.distinct, this.lockMode, this.joins, this.groups);
 		}
 
 		/**
@@ -368,11 +392,11 @@ public interface StatementMapper {
 				Sort sort = page.getSort();
 
 				return new SelectSpec(this.table, this.projectedFields, this.selectList, this.criteria,
-						sort.isSorted() ? sort : this.sort, page.getPageSize(), page.getOffset(), this.distinct, this.lockMode);
+						sort.isSorted() ? sort : this.sort, page.getPageSize(), page.getOffset(), this.distinct, this.lockMode, this.joins, this.groups);
 			}
 
 			return new SelectSpec(this.table, this.projectedFields, this.selectList, this.criteria, this.sort, this.limit,
-					this.offset, this.distinct, this.lockMode);
+					this.offset, this.distinct, this.lockMode,this.joins,this.groups);
 		}
 
 		/**
@@ -383,7 +407,7 @@ public interface StatementMapper {
 		 */
 		public SelectSpec offset(long offset) {
 			return new SelectSpec(this.table, this.projectedFields, this.selectList, this.criteria, this.sort, this.limit,
-					offset, this.distinct, this.lockMode);
+					offset, this.distinct, this.lockMode,this.joins,this.groups);
 		}
 
 		/**
@@ -394,7 +418,7 @@ public interface StatementMapper {
 		 */
 		public SelectSpec limit(int limit) {
 			return new SelectSpec(this.table, this.projectedFields, this.selectList, this.criteria, this.sort, limit,
-					this.offset, this.distinct, this.lockMode);
+					this.offset, this.distinct, this.lockMode,this.joins,this.groups);
 		}
 
 		/**
@@ -404,7 +428,7 @@ public interface StatementMapper {
 		 */
 		public SelectSpec distinct() {
 			return new SelectSpec(this.table, this.projectedFields, this.selectList, this.criteria, this.sort, limit,
-					this.offset, true, this.lockMode);
+					this.offset, true, this.lockMode,this.joins,this.groups);
 		}
 
 		/**
@@ -415,7 +439,7 @@ public interface StatementMapper {
 		 */
 		public SelectSpec lock(LockMode lockMode) {
 			return new SelectSpec(this.table, this.projectedFields, this.selectList, this.criteria, this.sort, limit,
-					this.offset, this.distinct, lockMode);
+					this.offset, this.distinct, lockMode,this.joins,this.groups);
 		}
 
 		/**
@@ -464,6 +488,14 @@ public interface StatementMapper {
 
 		public boolean isDistinct() {
 			return this.distinct;
+		}
+
+		public @Nullable Joins getJoins() {
+			return this.joins;
+		}
+
+		public @Nullable Groups getGroups() {
+			return this.groups;
 		}
 
 	}

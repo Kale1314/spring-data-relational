@@ -15,16 +15,16 @@
  */
 package org.springframework.data.relational.core.sql;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
 import org.springframework.data.relational.core.sql.Join.JoinType;
 import org.springframework.data.relational.core.sql.SelectBuilder.SelectAndFrom;
 import org.springframework.data.relational.core.sql.SelectBuilder.SelectFromAndJoin;
 import org.springframework.data.relational.core.sql.SelectBuilder.SelectWhereAndOr;
 import org.springframework.lang.Nullable;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Default {@link SelectBuilder} implementation.
@@ -44,6 +44,8 @@ class DefaultSelectBuilder implements SelectBuilder, SelectAndFrom, SelectFromAn
 	private final List<Join> joins = new ArrayList<>();
 	private @Nullable Condition where;
 	private final List<OrderByField> orderBy = new ArrayList<>();
+
+	private final List<GroupByField> groupBy = new ArrayList<>();
 	private @Nullable LockMode lockMode;
 
 	@Override
@@ -116,6 +118,12 @@ class DefaultSelectBuilder implements SelectBuilder, SelectAndFrom, SelectFromAn
 	@Override
 	public SelectFromAndJoin offset(long offset) {
 		this.offset = offset;
+		return this;
+	}
+
+	@Override
+	public SelectFromAndOrderBy groupBy(Collection<? extends GroupByField> groupByFields) {
+		this.groupBy.addAll(groupByFields);
 		return this;
 	}
 
@@ -203,10 +211,11 @@ class DefaultSelectBuilder implements SelectBuilder, SelectAndFrom, SelectFromAn
 	public Select build() {
 
 		DefaultSelect select = new DefaultSelect(distinct, selectList, from, limit, offset, joins, where, orderBy,
-				lockMode);
+				groupBy, lockMode);
 		SelectValidator.validate(select);
 		return select;
 	}
+
 
 	/**
 	 * Delegation builder to construct JOINs.
@@ -350,6 +359,12 @@ class DefaultSelectBuilder implements SelectBuilder, SelectAndFrom, SelectFromAn
 		public SelectFromAndJoin offset(long offset) {
 			selectBuilder.join(finishJoin());
 			return selectBuilder.offset(offset);
+		}
+
+		@Override
+		public SelectFromAndJoin end() {
+			selectBuilder.join(finishJoin());
+			return selectBuilder;
 		}
 
 		@Override

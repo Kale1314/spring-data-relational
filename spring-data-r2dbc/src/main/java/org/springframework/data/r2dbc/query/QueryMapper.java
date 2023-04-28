@@ -15,13 +15,6 @@
  */
 package org.springframework.data.r2dbc.query;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
-
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentPropertyPath;
@@ -38,6 +31,7 @@ import org.springframework.data.relational.core.query.CriteriaDefinition;
 import org.springframework.data.relational.core.query.CriteriaDefinition.Comparator;
 import org.springframework.data.relational.core.query.ValueFunction;
 import org.springframework.data.relational.core.sql.*;
+import org.springframework.data.relational.domain.SqlGroup;
 import org.springframework.data.relational.domain.SqlSort;
 import org.springframework.data.util.Pair;
 import org.springframework.data.util.TypeInformation;
@@ -49,6 +43,9 @@ import org.springframework.r2dbc.core.binding.Bindings;
 import org.springframework.r2dbc.core.binding.MutableBindings;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Maps {@link CriteriaDefinition} and {@link Sort} objects considering mapping metadata and dialect-specific
@@ -147,6 +144,7 @@ public class QueryMapper {
 
 	}
 
+
 	private OrderByField createSimpleOrderByField(Table table, RelationalPersistentEntity<?> entity, Sort.Order order) {
 
 		SqlSort.validate(order);
@@ -155,11 +153,22 @@ public class QueryMapper {
 		return OrderByField.from(table.column(field.getMappedColumnName()));
 	}
 
+	public List<GroupByField> getMappedGroupBy(Table table, List<String> groupBy, @Nullable RelationalPersistentEntity<?> entity) {
+		List<GroupByField> mappedOrder = new ArrayList<>();
+		for (String property : groupBy) {
+			SqlGroup.validate(property);
+			Field field = createPropertyField(entity, SqlIdentifier.unquoted(property), this.mappingContext);
+			GroupByField groupByField = GroupByField.from(table.column(field.getMappedColumnName()));
+			mappedOrder.add(groupByField);
+		}
+		return mappedOrder;
+	}
+
 	/**
 	 * Map the {@link Expression} object to apply field name mapping using {@link Class the type to read}.
 	 *
 	 * @param expression must not be {@literal null}.
-	 * @param entity related {@link RelationalPersistentEntity}, can be {@literal null}.
+	 * @param entity     related {@link RelationalPersistentEntity}, can be {@literal null}.
 	 * @return the mapped {@link Expression}.
 	 * @since 1.1
 	 */

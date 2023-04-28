@@ -15,10 +15,10 @@
  */
 package org.springframework.data.relational.core.sql;
 
+import org.springframework.lang.Nullable;
+
 import java.util.List;
 import java.util.OptionalLong;
-
-import org.springframework.lang.Nullable;
 
 /**
  * AST for a {@code SELECT} statement. Visiting order:
@@ -55,6 +55,9 @@ public interface Select extends Segment, Visitable {
 	 * @return the {@link List} of {@link OrderByField ORDER BY} fields.
 	 */
 	List<OrderByField> getOrderBy();
+
+
+	List<GroupByField> getGroupBy();
 
 	/**
 	 * Optional limit. Used for limit/offset paging.
