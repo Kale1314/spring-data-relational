@@ -244,6 +244,10 @@ public class PersistentPropertyPathExtensionUnitTests {
 	void getAggregatePath() {
 		assertThat(extPath("withId").getAggregatePath()).isNotNull();
 	}
+	@Test
+	void getAggregatePathFromRoot() {
+		assertThat(extPath(entity).getAggregatePath()).isNotNull();
+	}
 	private PersistentPropertyPathExtension extPath(RelationalPersistentEntity<?> entity) {
 		return new PersistentPropertyPathExtension(context, entity);
 	}

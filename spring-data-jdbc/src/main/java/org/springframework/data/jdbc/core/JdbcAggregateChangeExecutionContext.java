@@ -204,17 +204,17 @@ class JdbcAggregateChangeExecutionContext {
 		PersistentPropertyPathExtension path = new PersistentPropertyPathExtension(context, action.getPropertyPath());
 		PersistentPropertyPathExtension idPath = path.getIdDefiningParentPath();
 
-		DbAction.WithEntity<?> idOwningAction = getIdOwningAction(action, idPath);
+		DbAction.WithEntity<?> idOwningAction = getIdOwningAction(action, idPath.getAggregatePath());
 
 		return getPotentialGeneratedIdFrom(idOwningAction);
 	}
 
 	private DbAction.WithEntity<?> getIdOwningAction(DbAction.WithEntity<?> action,
-			PersistentPropertyPathExtension idPath) {
+			AggregatePath idPath) {
 
 		if (!(action instanceof DbAction.WithDependingOn<?> withDependingOn)) {
 
-			Assert.state(idPath.getLength() == 0,
+			Assert.state(idPath.isRoot(),
 					"When the id path is not empty the id providing action should be of type WithDependingOn");
 
 			return action;

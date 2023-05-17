@@ -31,4 +31,15 @@ public class AggregatePath {
 	public boolean isRoot() {
 		return path == null;
 	}
+
+	/**
+	 * Tests if {@code this} and the argument represent the same path.
+	 *
+	 * @param path to which this path gets compared. May be {@literal null}.
+	 * @return Whence the argument matches the path represented by this instance.
+	 */
+	public boolean matches(PersistentPropertyPath<RelationalPersistentProperty> path) {
+		return this.path == null ? path.isEmpty() : this.path.equals(path);
+	}
+
 }

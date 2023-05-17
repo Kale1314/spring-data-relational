@@ -20,7 +20,6 @@ import java.util.Objects;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.relational.core.sql.IdentifierProcessing;
 import org.springframework.data.relational.core.sql.SqlIdentifier;
 import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
@@ -155,8 +154,8 @@ public class PersistentPropertyPathExtension {
 			if (this.path == null) {
 				throw new IllegalStateException("Couldn't resolve leaf PersistentEntity absent path");
 			}
-			throw new IllegalStateException(String.format("Couldn't resolve leaf PersistentEntity for type %s",
-					path.getLeafProperty().getActualType()));
+			throw new IllegalStateException(
+					String.format("Couldn't resolve leaf PersistentEntity for type %s", path.getLeafProperty().getActualType()));
 		}
 
 		return entity;
@@ -481,8 +480,7 @@ public class PersistentPropertyPathExtension {
 	private SqlIdentifier prefixWithTableAlias(SqlIdentifier columnName) {
 
 		SqlIdentifier tableAlias = getTableAlias();
-		return tableAlias == null ? columnName
-				: columnName.transform(name -> tableAlias.getReference() + "_" + name);
+		return tableAlias == null ? columnName : columnName.transform(name -> tableAlias.getReference() + "_" + name);
 	}
 
 	@Override
@@ -502,6 +500,11 @@ public class PersistentPropertyPathExtension {
 	}
 
 	public AggregatePath getAggregatePath() {
-		return ((RelationalMappingContext)context).getAggregatePath(path);
+		if (path != null) {
+
+			return ((RelationalMappingContext) context).getAggregatePath(path);
+		} else {
+			return ((RelationalMappingContext) context).getAggregateRootPath(entity.getType());
+		}
 	}
 }
