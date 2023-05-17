@@ -23,7 +23,6 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -40,7 +39,7 @@ public class RelationalMappingContext
 		extends AbstractMappingContext<RelationalPersistentEntity<?>, RelationalPersistentProperty> {
 
 	private final NamingStrategy namingStrategy;
-	private final Map<PersistentPropertyPath, AggregatePath> aggregatePathCache = new ConcurrentHashMap<>();
+	private final Map<Object, AggregatePath> aggregatePathCache = new ConcurrentHashMap<>();
 
 	private boolean forceQuote = true;
 
@@ -110,10 +109,14 @@ public class RelationalMappingContext
 	}
 
 	public AggregatePath getAggregatePath(PersistentPropertyPath<? extends RelationalPersistentProperty> path) {
-		return aggregatePathCache.computeIfAbsent(path, key -> createAggregatePath(path));
+		return aggregatePathCache.computeIfAbsent(path, key -> createAggregatePath(null, path));
 	}
 
-	protected AggregatePath createAggregatePath(PersistentPropertyPath<? extends RelationalPersistentProperty> path) {
-		return new AggregatePath();
+	protected AggregatePath createAggregatePath(Class<?> type, PersistentPropertyPath<? extends RelationalPersistentProperty> path) {
+		return new AggregatePath(type, path);
+	}
+
+	public AggregatePath getAggregateRootPath(Class<?> type) {
+		return aggregatePathCache.computeIfAbsent(type, key -> createAggregatePath(type, null));
 	}
 }

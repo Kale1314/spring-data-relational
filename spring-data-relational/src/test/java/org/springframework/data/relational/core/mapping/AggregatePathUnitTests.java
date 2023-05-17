@@ -18,8 +18,30 @@ package org.springframework.data.relational.core.mapping;
 
 
 import org.junit.jupiter.api.Test;
+import org.springframework.data.mapping.context.MappingContext;
+
+import static org.assertj.core.api.Assertions.*;
 
 class AggregatePathUnitTests {
+	RelationalMappingContext context = new RelationalMappingContext();
 
+	@Test
+	void isNotRootForNonRootPath() {
 
+		AggregatePath path = context.getAggregatePath(context.getPersistentPropertyPath("id", DummyEntity.class));
+
+		assertThat(path.isRoot()).isFalse();
+	}
+	@Test
+	void isRootForRootPath() {
+
+		AggregatePath path = context.getAggregateRootPath(DummyEntity.class);
+
+		assertThat(path.isRoot()).isTrue();
+	}
+	static class DummyEntity{
+		Long id;
+		String name;
+	}
 }
+

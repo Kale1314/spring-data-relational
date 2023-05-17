@@ -16,5 +16,19 @@
 
 package org.springframework.data.relational.core.mapping;
 
+import org.springframework.data.mapping.PersistentPropertyPath;
+
 public class AggregatePath {
+	private final Class<?> type;
+	private final PersistentPropertyPath<? extends RelationalPersistentProperty> path;
+
+	public AggregatePath(Class<?> type, PersistentPropertyPath<? extends RelationalPersistentProperty> path) {
+
+		this.type = type;
+		this.path = path;
+	}
+
+	public boolean isRoot() {
+		return path == null;
+	}
 }
