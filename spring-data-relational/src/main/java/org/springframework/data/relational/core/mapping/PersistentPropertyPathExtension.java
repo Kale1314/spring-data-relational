@@ -500,4 +500,8 @@ public class PersistentPropertyPathExtension {
 	public int hashCode() {
 		return Objects.hash(entity, path);
 	}
+
+	public AggregatePath getAggregatePath() {
+		return ((RelationalMappingContext)context).getAggregatePath(path);
+	}
 }
