@@ -15,6 +15,7 @@
  */
 package org.springframework.data.relational.core.mapping;
 
+import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.context.AbstractMappingContext;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.Property;
@@ -102,4 +103,7 @@ public class RelationalMappingContext
 		return this.namingStrategy;
 	}
 
+	public AggregatePath getAggregatePath(PersistentPropertyPath path) {
+		return new AggregatePath();
+	}
 }

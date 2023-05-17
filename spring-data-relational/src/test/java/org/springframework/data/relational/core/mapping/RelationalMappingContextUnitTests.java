@@ -21,8 +21,11 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 
 /**
@@ -31,19 +34,31 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
  * @author Toshiaki Maki
  */
 public class RelationalMappingContextUnitTests {
+	RelationalMappingContext context = new RelationalMappingContext();
+
+	@BeforeEach
+	void setup() {
+		SimpleTypeHolder holder = new SimpleTypeHolder(new HashSet<>(Arrays.asList(UUID.class)), true);
+		context.setSimpleTypeHolder(holder);
+	}
 
 	@Test // DATAJDBC-229
 	public void uuidPropertyIsNotEntity() {
 
-		SimpleTypeHolder holder = new SimpleTypeHolder(new HashSet<>(Arrays.asList(UUID.class)), true);
 
-		RelationalMappingContext mappingContext = new RelationalMappingContext();
-		mappingContext.setSimpleTypeHolder(holder);
-
-		RelationalPersistentEntity<?> entity = mappingContext.getPersistentEntity(EntityWithUuid.class);
+		RelationalPersistentEntity<?> entity = context.getPersistentEntity(EntityWithUuid.class);
 		RelationalPersistentProperty uuidProperty = entity.getRequiredPersistentProperty("uuid");
 
 		assertThat(uuidProperty.isEntity()).isFalse();
+	}
+
+	@Test
+	public void canObtainAggregatePath() {
+
+		PersistentPropertyPath<RelationalPersistentProperty> path = context.getPersistentPropertyPath("uuid", EntityWithUuid.class);
+		AggregatePath aggregatePath = context.getAggregatePath(path);
+
+		assertThat(aggregatePath).isNotNull();
 	}
 
 	static class EntityWithUuid {

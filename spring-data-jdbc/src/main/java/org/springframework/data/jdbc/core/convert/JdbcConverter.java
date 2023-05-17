@@ -19,8 +19,10 @@ import java.sql.ResultSet;
 import java.sql.SQLType;
 
 import org.springframework.data.jdbc.core.mapping.JdbcValue;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.relational.core.conversion.RelationalConverter;
 import org.springframework.data.relational.core.mapping.PersistentPropertyPathExtension;
+import org.springframework.data.relational.core.mapping.RelationalMappingContext;
 import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
 import org.springframework.data.relational.core.mapping.RelationalPersistentProperty;
 import org.springframework.data.util.TypeInformation;
@@ -88,4 +90,7 @@ public interface JdbcConverter extends RelationalConverter {
 	 * @since 2.0
 	 */
 	SQLType getTargetSqlType(RelationalPersistentProperty property);
+
+	@Override
+	RelationalMappingContext getMappingContext();
 }

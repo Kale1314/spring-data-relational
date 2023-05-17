@@ -42,7 +42,9 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.relational.core.conversion.DbAction;
 import org.springframework.data.relational.core.conversion.DbActionExecutionResult;
 import org.springframework.data.relational.core.conversion.IdValueSource;
+import org.springframework.data.relational.core.mapping.AggregatePath;
 import org.springframework.data.relational.core.mapping.PersistentPropertyPathExtension;
+import org.springframework.data.relational.core.mapping.RelationalMappingContext;
 import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
 import org.springframework.data.relational.core.mapping.RelationalPersistentProperty;
 import org.springframework.data.relational.core.sql.LockMode;
@@ -65,7 +67,7 @@ class JdbcAggregateChangeExecutionContext {
 	private static final String UPDATE_FAILED = "Failed to update entity [%s]; Id [%s] not found in database";
 	private static final String UPDATE_FAILED_OPTIMISTIC_LOCKING = "Failed to update entity [%s]; The entity was updated since it was rea or it isn't in the database at all";
 
-	private final MappingContext<? extends RelationalPersistentEntity<?>, ? extends RelationalPersistentProperty> context;
+	private final RelationalMappingContext context;
 	private final JdbcConverter converter;
 	private final DataAccessStrategy accessStrategy;
 
@@ -74,7 +76,7 @@ class JdbcAggregateChangeExecutionContext {
 	JdbcAggregateChangeExecutionContext(JdbcConverter converter, DataAccessStrategy accessStrategy) {
 
 		this.converter = converter;
-		this.context = converter.getMappingContext();
+		this.context =  converter.getMappingContext();
 		this.accessStrategy = accessStrategy;
 	}
 
@@ -182,6 +184,8 @@ class JdbcAggregateChangeExecutionContext {
 	private Identifier getParentKeys(DbAction.WithDependingOn<?> action, JdbcConverter converter) {
 
 		Object id = getParentId(action);
+
+		AggregatePath path = context.getAggregatePath(action.getPropertyPath());
 
 		JdbcIdentifierBuilder identifier = JdbcIdentifierBuilder //
 				.forBackReferences(converter, new PersistentPropertyPathExtension(context, action.getPropertyPath()), id);
