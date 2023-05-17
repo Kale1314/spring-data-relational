@@ -21,7 +21,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.UUID;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
@@ -35,16 +34,15 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
  */
 public class RelationalMappingContextUnitTests {
 	RelationalMappingContext context = new RelationalMappingContext();
+	SimpleTypeHolder holder = new SimpleTypeHolder(new HashSet<>(Arrays.asList(UUID.class)), true);
 
 	@BeforeEach
 	void setup() {
-		SimpleTypeHolder holder = new SimpleTypeHolder(new HashSet<>(Arrays.asList(UUID.class)), true);
 		context.setSimpleTypeHolder(holder);
 	}
 
 	@Test // DATAJDBC-229
 	public void uuidPropertyIsNotEntity() {
-
 
 		RelationalPersistentEntity<?> entity = context.getPersistentEntity(EntityWithUuid.class);
 		RelationalPersistentProperty uuidProperty = entity.getRequiredPersistentProperty("uuid");
@@ -55,10 +53,54 @@ public class RelationalMappingContextUnitTests {
 	@Test
 	public void canObtainAggregatePath() {
 
-		PersistentPropertyPath<RelationalPersistentProperty> path = context.getPersistentPropertyPath("uuid", EntityWithUuid.class);
+		PersistentPropertyPath<RelationalPersistentProperty> path = context.getPersistentPropertyPath("uuid",
+				EntityWithUuid.class);
 		AggregatePath aggregatePath = context.getAggregatePath(path);
 
 		assertThat(aggregatePath).isNotNull();
+	}
+
+	@Test
+	public void subClassesMayInstantiateTheAggregatePath() {
+
+		Integer[] counter = new Integer[] { 0 };
+		context = new RelationalMappingContext() {
+			@Override
+			protected AggregatePath createAggregatePath(PersistentPropertyPath<? extends RelationalPersistentProperty> path) {
+				counter[0]++;
+				return new AggregatePath();
+			}
+		};
+		context.setSimpleTypeHolder(holder);
+
+		PersistentPropertyPath<RelationalPersistentProperty> path = context.getPersistentPropertyPath("uuid",
+				EntityWithUuid.class);
+		context.getAggregatePath(path);
+
+		assertThat(counter[0]).isEqualTo(1);
+	}
+
+	@Test
+	public void aggregatePathsGetCached() {
+
+		Integer[] counter = new Integer[] { 0 };
+		context = new RelationalMappingContext() {
+			@Override
+			protected AggregatePath createAggregatePath(PersistentPropertyPath<? extends RelationalPersistentProperty> path) {
+				counter[0]++;
+				return new AggregatePath();
+			}
+		};
+		context.setSimpleTypeHolder(holder);
+
+		PersistentPropertyPath<RelationalPersistentProperty> path = context.getPersistentPropertyPath("uuid",
+				EntityWithUuid.class);
+
+		context.getAggregatePath(path);
+		context.getAggregatePath(path);
+		context.getAggregatePath(path);
+
+		assertThat(counter[0]).isEqualTo(1);
 	}
 
 	static class EntityWithUuid {

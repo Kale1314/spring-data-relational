@@ -23,6 +23,10 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * {@link MappingContext} implementation.
  *
@@ -36,6 +40,8 @@ public class RelationalMappingContext
 		extends AbstractMappingContext<RelationalPersistentEntity<?>, RelationalPersistentProperty> {
 
 	private final NamingStrategy namingStrategy;
+	private final Map<PersistentPropertyPath, AggregatePath> aggregatePathCache = new ConcurrentHashMap<>();
+
 	private boolean forceQuote = true;
 
 	/**
@@ -90,7 +96,7 @@ public class RelationalMappingContext
 
 	@Override
 	protected RelationalPersistentProperty createPersistentProperty(Property property,
-			RelationalPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder) {
+																	RelationalPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder) {
 
 		BasicRelationalPersistentProperty persistentProperty = new BasicRelationalPersistentProperty(property, owner,
 				simpleTypeHolder, this.namingStrategy);
@@ -103,7 +109,11 @@ public class RelationalMappingContext
 		return this.namingStrategy;
 	}
 
-	public AggregatePath getAggregatePath(PersistentPropertyPath path) {
+	public AggregatePath getAggregatePath(PersistentPropertyPath<? extends RelationalPersistentProperty> path) {
+		return aggregatePathCache.computeIfAbsent(path, key -> createAggregatePath(path));
+	}
+
+	protected AggregatePath createAggregatePath(PersistentPropertyPath<? extends RelationalPersistentProperty> path) {
 		return new AggregatePath();
 	}
 }
