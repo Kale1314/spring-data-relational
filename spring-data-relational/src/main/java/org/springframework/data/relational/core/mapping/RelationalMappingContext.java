@@ -113,10 +113,13 @@ public class RelationalMappingContext
 	}
 
 	protected AggregatePath createAggregatePath(Class<?> type, PersistentPropertyPath<? extends RelationalPersistentProperty> path) {
-		return new AggregatePath(type, path);
+		return new AggregatePath(this, type, path);
 	}
 
 	public AggregatePath getAggregateRootPath(Class<?> type) {
+
+		Assert.notNull(type, "type must not be null");
+
 		return aggregatePathCache.computeIfAbsent(type, key -> createAggregatePath(type, null));
 	}
 }

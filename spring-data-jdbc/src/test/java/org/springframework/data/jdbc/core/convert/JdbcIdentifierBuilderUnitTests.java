@@ -16,7 +16,6 @@
 package org.springframework.data.jdbc.core.convert;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.jdbc.core.PropertyPathTestingUtils.*;
 import static org.springframework.data.relational.core.sql.SqlIdentifier.*;
 
 import java.util.List;
@@ -25,6 +24,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.jdbc.core.PersistentPropertyPathTestUtils;
 import org.springframework.data.jdbc.core.mapping.JdbcMappingContext;
 import org.springframework.data.relational.core.mapping.PersistentPropertyPathExtension;
 
@@ -117,7 +117,7 @@ public class JdbcIdentifierBuilderUnitTests {
 	}
 
 	private PersistentPropertyPathExtension getPath(String dotPath) {
-		return new PersistentPropertyPathExtension(context, toPath(dotPath, DummyEntity.class, context));
+		return new PersistentPropertyPathExtension(context, PersistentPropertyPathTestUtils.getPath(dotPath, DummyEntity.class, context));
 	}
 
 	@SuppressWarnings("unused")

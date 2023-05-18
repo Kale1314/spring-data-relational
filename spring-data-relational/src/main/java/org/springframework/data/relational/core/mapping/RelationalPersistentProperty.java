@@ -38,7 +38,10 @@ public interface RelationalPersistentProperty extends PersistentProperty<Relatio
 	@Override
 	RelationalPersistentEntity<?> getOwner();
 
+	@Deprecated
 	SqlIdentifier getReverseColumnName(PersistentPropertyPathExtension path);
+
+	SqlIdentifier getReverseColumnName(AggregatePath path);
 
 	@Nullable
 	SqlIdentifier getKeyColumn();

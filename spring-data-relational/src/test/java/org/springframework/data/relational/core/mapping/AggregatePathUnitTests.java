@@ -18,9 +18,14 @@ package org.springframework.data.relational.core.mapping;
 
 
 import org.junit.jupiter.api.Test;
-import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.ReadOnlyProperty;
+import org.springframework.data.mapping.PersistentPropertyPath;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.SoftAssertions.*;
 
 class AggregatePathUnitTests {
 	RelationalMappingContext context = new RelationalMappingContext();
@@ -28,7 +33,7 @@ class AggregatePathUnitTests {
 	@Test
 	void isNotRootForNonRootPath() {
 
-		AggregatePath path = context.getAggregatePath(context.getPersistentPropertyPath("id", DummyEntity.class));
+		AggregatePath path = context.getAggregatePath(context.getPersistentPropertyPath("entityId", DummyEntity.class));
 
 		assertThat(path.isRoot()).isFalse();
 	}
@@ -39,9 +44,60 @@ class AggregatePathUnitTests {
 
 		assertThat(path.isRoot()).isTrue();
 	}
-	static class DummyEntity{
-		Long id;
-		String name;
+
+
+	@Test // DATAJDBC-359
+	void idDefiningPath() {
+
+		assertSoftly(softly -> {
+
+			softly.assertThat(path("second.third2.value").getIdDefiningParentPath().isRoot()).isTrue();
+			softly.assertThat(path("second.third.value").getIdDefiningParentPath().isRoot()).isTrue();
+			softly.assertThat(path("secondList.third2.value").getIdDefiningParentPath().isRoot()).isTrue();
+			softly.assertThat(path("secondList.third.value").getIdDefiningParentPath().isRoot()).isTrue();
+			softly.assertThat(path("second2.third2.value").getIdDefiningParentPath().isRoot()).isTrue();
+			softly.assertThat(path("second2.third.value").getIdDefiningParentPath().isRoot()).isTrue();
+			softly.assertThat(path("withId.second.third2.value").getIdDefiningParentPath().isRoot()).isFalse();
+			softly.assertThat(path("withId.second.third.value").getIdDefiningParentPath().isRoot()).isFalse();
+		});
 	}
+
+	private AggregatePath path(String path) {
+		return context.getAggregatePath(createSimplePath(path));
+	}
+	PersistentPropertyPath<RelationalPersistentProperty> createSimplePath(String path) {
+		return PersistentPropertyPathTestUtils.getPath(context,path, DummyEntity.class);
+	}
+
+	@SuppressWarnings("unused")
+	static class DummyEntity {
+		@Id
+		Long entityId;
+		@ReadOnlyProperty
+		Second second;
+		@Embedded(onEmpty = Embedded.OnEmpty.USE_NULL, prefix = "sec") Second second2;
+		@Embedded(onEmpty = Embedded.OnEmpty.USE_NULL) Second second3;
+		List<Second> secondList;
+		WithId withId;
+	}
+
+	@SuppressWarnings("unused")
+	static class Second {
+		Third third;
+		@Embedded(onEmpty = Embedded.OnEmpty.USE_NULL, prefix = "thrd") Third third2;
+	}
+
+	@SuppressWarnings("unused")
+	static class Third {
+		String value;
+	}
+
+	@SuppressWarnings("unused")
+	static class WithId {
+		@Id Long withIdId;
+		Second second;
+		@Embedded(onEmpty = Embedded.OnEmpty.USE_NULL, prefix = "sec") Second second2;
+	}
+
 }
 

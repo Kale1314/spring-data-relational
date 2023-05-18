@@ -91,6 +91,9 @@ public interface NamingStrategy {
 	default String getReverseColumnName(PersistentPropertyPathExtension path) {
 		return getTableName(path.getIdDefiningParentPath().getRequiredLeafEntity().getType());
 	}
+	default String getReverseColumnName(AggregatePath path){
+		return getTableName(path.getIdDefiningParentPath().getRequiredLeafEntity().getType());
+	}
 
 	/**
 	 * For a map valued reference A -> Map&gt;X,B&lt; this is the name of the column in the table for B holding the key of
@@ -104,4 +107,5 @@ public interface NamingStrategy {
 
 		return getReverseColumnName(property) + "_key";
 	}
+
 }

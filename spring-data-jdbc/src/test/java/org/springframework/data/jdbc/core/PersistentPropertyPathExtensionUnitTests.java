@@ -21,7 +21,6 @@ import static org.springframework.data.relational.core.sql.SqlIdentifier.*;
 
 import java.util.List;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.ReadOnlyProperty;
@@ -257,7 +256,7 @@ public class PersistentPropertyPathExtensionUnitTests {
 	}
 
 	PersistentPropertyPath<RelationalPersistentProperty> createSimplePath(String path) {
-		return PropertyPathTestingUtils.toPath(path, DummyEntity.class, context);
+		return PersistentPropertyPathTestUtils.getPath(path, DummyEntity.class, context);
 	}
 
 	@SuppressWarnings("unused")

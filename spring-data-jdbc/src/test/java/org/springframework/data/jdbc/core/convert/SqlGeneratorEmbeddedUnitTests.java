@@ -23,7 +23,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.jdbc.core.PropertyPathTestingUtils;
+import org.springframework.data.jdbc.core.PersistentPropertyPathTestUtils;
 import org.springframework.data.jdbc.core.mapping.JdbcMappingContext;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Embedded;
@@ -177,7 +177,7 @@ public class SqlGeneratorEmbeddedUnitTests {
 	public void deleteByPath() {
 
 		final String sql = sqlGenerator
-				.createDeleteByPath(PropertyPathTestingUtils.toPath("embedded.other", DummyEntity2.class, context));
+				.createDeleteByPath(PersistentPropertyPathTestUtils.getPath("embedded.other", DummyEntity2.class, context));
 
 		assertThat(sql).containsSequence("DELETE FROM other_entity", //
 				"WHERE", //
@@ -295,7 +295,7 @@ public class SqlGeneratorEmbeddedUnitTests {
 
 	private SqlGenerator.Join generateJoin(String path, Class<?> type) {
 		return createSqlGenerator(type)
-				.getJoin(new PersistentPropertyPathExtension(context, PropertyPathTestingUtils.toPath(path, type, context)));
+				.getJoin(new PersistentPropertyPathExtension(context, PersistentPropertyPathTestUtils.getPath(path, type, context)));
 	}
 
 	@Nullable
@@ -310,7 +310,7 @@ public class SqlGeneratorEmbeddedUnitTests {
 	private org.springframework.data.relational.core.sql.Column generatedColumn(String path, Class<?> type) {
 
 		return createSqlGenerator(type)
-				.getColumn(new PersistentPropertyPathExtension(context, PropertyPathTestingUtils.toPath(path, type, context)));
+				.getColumn(new PersistentPropertyPathExtension(context, PersistentPropertyPathTestUtils.getPath(path, type, context)));
 	}
 
 	@SuppressWarnings("unused")

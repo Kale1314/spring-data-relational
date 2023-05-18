@@ -68,7 +68,7 @@ public class RelationalMappingContextUnitTests {
 			@Override
 			protected AggregatePath createAggregatePath(Class<?> type, PersistentPropertyPath<? extends RelationalPersistentProperty> path) {
 				counter[0]++;
-				return new AggregatePath(type, path);
+				return new AggregatePath(context, type, path);
 			}
 		};
 		context.setSimpleTypeHolder(holder);
@@ -88,7 +88,7 @@ public class RelationalMappingContextUnitTests {
 			@Override
 			protected AggregatePath createAggregatePath(Class<?> type, PersistentPropertyPath<? extends RelationalPersistentProperty> path) {
 				counter[0]++;
-				return new AggregatePath(type, path);
+				return new AggregatePath(context, type, path);
 			}
 		};
 		context.setSimpleTypeHolder(holder);
