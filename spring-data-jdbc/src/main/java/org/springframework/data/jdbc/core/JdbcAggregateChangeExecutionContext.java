@@ -15,16 +15,7 @@
  */
 package org.springframework.data.jdbc.core;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -38,7 +29,6 @@ import org.springframework.data.jdbc.core.convert.JdbcIdentifierBuilder;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.PersistentPropertyPathAccessor;
-import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.relational.core.conversion.DbAction;
 import org.springframework.data.relational.core.conversion.DbActionExecutionResult;
 import org.springframework.data.relational.core.conversion.IdValueSource;
@@ -76,7 +66,7 @@ class JdbcAggregateChangeExecutionContext {
 	JdbcAggregateChangeExecutionContext(JdbcConverter converter, DataAccessStrategy accessStrategy) {
 
 		this.converter = converter;
-		this.context =  converter.getMappingContext();
+		this.context = converter.getMappingContext();
 		this.accessStrategy = accessStrategy;
 	}
 
@@ -190,8 +180,7 @@ class JdbcAggregateChangeExecutionContext {
 
 		for (Map.Entry<PersistentPropertyPath<RelationalPersistentProperty>, Object> qualifier : action.getQualifiers()
 				.entrySet()) {
-			identifier = identifier.withQualifier(new PersistentPropertyPathExtension(context, qualifier.getKey()),
-					qualifier.getValue());
+			identifier = identifier.withQualifier(context.getAggregatePath(qualifier.getKey()), qualifier.getValue());
 		}
 
 		return identifier.build();
@@ -207,8 +196,7 @@ class JdbcAggregateChangeExecutionContext {
 		return getPotentialGeneratedIdFrom(idOwningAction);
 	}
 
-	private DbAction.WithEntity<?> getIdOwningAction(DbAction.WithEntity<?> action,
-			AggregatePath idPath) {
+	private DbAction.WithEntity<?> getIdOwningAction(DbAction.WithEntity<?> action, AggregatePath idPath) {
 
 		if (!(action instanceof DbAction.WithDependingOn<?> withDependingOn)) {
 

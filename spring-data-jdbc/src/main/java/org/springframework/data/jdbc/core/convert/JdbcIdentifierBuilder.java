@@ -69,7 +69,21 @@ public class JdbcIdentifierBuilder {
 	 * @param value map key or list index qualifying the map identified by {@code path}. Must not be {@literal null}.
 	 * @return this builder. Guaranteed to be not {@literal null}.
 	 */
+	@Deprecated
 	public JdbcIdentifierBuilder withQualifier(PersistentPropertyPathExtension path, Object value) {
+
+		return withQualifier(path.getAggregatePath(), value);
+	}
+
+
+	/**
+	 * Adds a qualifier to the identifier to build. A qualifier is a map key or a list index.
+	 *
+	 * @param path path to the map that gets qualified by {@code value}. Must not be {@literal null}.
+	 * @param value map key or list index qualifying the map identified by {@code path}. Must not be {@literal null}.
+	 * @return this builder. Guaranteed to be not {@literal null}.
+	 */
+	public JdbcIdentifierBuilder withQualifier(AggregatePath path, Object value) {
 
 		Assert.notNull(path, "Path must not be null");
 		Assert.notNull(value, "Value must not be null");

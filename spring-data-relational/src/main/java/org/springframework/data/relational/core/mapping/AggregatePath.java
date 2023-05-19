@@ -157,6 +157,27 @@ public class AggregatePath {
 		return path == null ? 0 : path.getLength();
 	}
 
+
+	/**
+	 * The column name used for the list index or map key of the leaf property of this path.
+	 *
+	 * @return May be {@literal null}.
+	 */
+	@Nullable
+	public SqlIdentifier getQualifierColumn() {
+		return path == null ? SqlIdentifier.EMPTY : path.getLeafProperty().getKeyColumn();
+	}
+
+	/**
+	 * The type of the qualifier column of the leaf property of this path or {@literal null} if this is not applicable.
+	 *
+	 * @return may be {@literal null}.
+	 */
+	@Nullable
+	public Class<?> getQualifierColumnType() {
+		return path == null ? null : path.getLeafProperty().getQualifierColumnType();
+	}
+
 	@Override
 	public String toString() {
 		return "AggregatePath[" + (type == null ? path.getBaseProperty().getOwner().getType().getName() : type.getName()) +  "]" + ((path == null) ? "/" : path.toDotPath());
