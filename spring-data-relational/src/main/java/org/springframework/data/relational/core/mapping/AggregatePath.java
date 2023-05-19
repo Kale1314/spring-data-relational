@@ -37,6 +37,12 @@ public class AggregatePath {
 		this.path = path;
 	}
 
+
+	public static boolean isWritable(@Nullable PersistentPropertyPath<? extends RelationalPersistentProperty> path) {
+		return path == null || path.getLeafProperty().isWritable() && isWritable(path.getParentPath());
+	}
+
+
 	public boolean isRoot() {
 		return path == null;
 	}
@@ -182,4 +188,6 @@ public class AggregatePath {
 	public String toString() {
 		return "AggregatePath[" + (type == null ? path.getBaseProperty().getOwner().getType().getName() : type.getName()) +  "]" + ((path == null) ? "/" : path.toDotPath());
 	}
+
+
 }
