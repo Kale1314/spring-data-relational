@@ -60,7 +60,9 @@ public class AggregatePath {
 
 		Assert.state(path != null, "Empty paths don't have a reverse column name");
 
-		return path.getLeafProperty().getReverseColumnName(this);
+		RelationalPersistentProperty property = path.getLeafProperty();
+		System.out.println("leaf prop" + property);
+		return property.getReverseColumnName(this);
 	}
 
 	/**
@@ -76,7 +78,7 @@ public class AggregatePath {
 		}
 
 		if (path.getLength() == 1) {
-			return context.getAggregateRootPath(path.getLeafProperty().getActualType());
+			return context.getAggregateRootPath(path.getLeafProperty().getOwner().getType());
 		}
 
 		return context.getAggregatePath(path.getParentPath());
@@ -123,7 +125,40 @@ public class AggregatePath {
 		return parent;
 	}
 
+	/**
+	 * The {@link RelationalPersistentEntity} associated with the leaf of this path or throw {@link IllegalStateException}
+	 * if the leaf cannot be resolved.
+	 *
+	 * @return the required {@link RelationalPersistentEntity} associated with the leaf of this path.
+	 * @throws IllegalStateException if the persistent entity cannot be resolved.
+	 */
 	public RelationalPersistentEntity<?> getRequiredLeafEntity() {
-		return null;
+
+		RelationalPersistentEntity<?> entity = getLeafEntity();
+
+		if (entity == null) {
+
+			if (this.path == null) {
+				throw new IllegalStateException("Couldn't resolve leaf PersistentEntity absent path");
+			}
+			throw new IllegalStateException(
+					String.format("Couldn't resolve leaf PersistentEntity for type %s", path.getLeafProperty().getActualType()));
+		}
+
+		return entity;
+	}
+
+	public RelationalPersistentProperty getRequiredIdProperty() {
+		return this.path == null ? context.getRequiredPersistentEntity(type).getRequiredIdProperty() : getRequiredLeafEntity().getRequiredIdProperty();
+
+	}
+
+	public int getLength() {
+		return path == null ? 0 : path.getLength();
+	}
+
+	@Override
+	public String toString() {
+		return "AggregatePath[" + (type == null ? path.getBaseProperty().getOwner().getType().getName() : type.getName()) +  "]" + ((path == null) ? "/" : path.toDotPath());
 	}
 }

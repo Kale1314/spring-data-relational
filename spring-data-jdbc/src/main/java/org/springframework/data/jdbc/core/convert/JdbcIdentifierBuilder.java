@@ -15,6 +15,7 @@
  */
 package org.springframework.data.jdbc.core.convert;
 
+import org.springframework.data.relational.core.mapping.AggregatePath;
 import org.springframework.data.relational.core.mapping.PersistentPropertyPathExtension;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -40,7 +41,16 @@ public class JdbcIdentifierBuilder {
 	/**
 	 * Creates ParentKeys with backreference for the given path and value of the parents id.
 	 */
+	@Deprecated
 	public static JdbcIdentifierBuilder forBackReferences(JdbcConverter converter, PersistentPropertyPathExtension path,
+			@Nullable Object value) {
+		return forBackReferences(converter, path.getAggregatePath(), value);
+	}
+
+	/**
+	 * Creates ParentKeys with backreference for the given path and value of the parents id.
+	 */
+	public static JdbcIdentifierBuilder forBackReferences(JdbcConverter converter, AggregatePath path,
 			@Nullable Object value) {
 
 		Identifier identifier = Identifier.of( //

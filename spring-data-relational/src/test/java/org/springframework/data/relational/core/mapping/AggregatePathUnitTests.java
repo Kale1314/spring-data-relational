@@ -26,9 +26,12 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.SoftAssertions.*;
+import static org.springframework.data.relational.core.sql.SqlIdentifier.*;
 
 class AggregatePathUnitTests {
 	RelationalMappingContext context = new RelationalMappingContext();
+
+	private RelationalPersistentEntity<?> entity = context.getRequiredPersistentEntity(DummyEntity.class);
 
 	@Test
 	void isNotRootForNonRootPath() {
@@ -51,15 +54,48 @@ class AggregatePathUnitTests {
 
 		assertSoftly(softly -> {
 
-			softly.assertThat(path("second.third2.value").getIdDefiningParentPath().isRoot()).isTrue();
-			softly.assertThat(path("second.third.value").getIdDefiningParentPath().isRoot()).isTrue();
-			softly.assertThat(path("secondList.third2.value").getIdDefiningParentPath().isRoot()).isTrue();
-			softly.assertThat(path("secondList.third.value").getIdDefiningParentPath().isRoot()).isTrue();
-			softly.assertThat(path("second2.third2.value").getIdDefiningParentPath().isRoot()).isTrue();
-			softly.assertThat(path("second2.third.value").getIdDefiningParentPath().isRoot()).isTrue();
-			softly.assertThat(path("withId.second.third2.value").getIdDefiningParentPath().isRoot()).isFalse();
-			softly.assertThat(path("withId.second.third.value").getIdDefiningParentPath().isRoot()).isFalse();
+			softly.assertThat(path("second.third2.value").getIdDefiningParentPath()).isEqualTo(path());
+			softly.assertThat(path("second.third.value").getIdDefiningParentPath()).isEqualTo(path());
+			softly.assertThat(path("secondList.third2.value").getIdDefiningParentPath()).isEqualTo(path());
+			softly.assertThat(path("secondList.third.value").getIdDefiningParentPath()).isEqualTo(path());
+			softly.assertThat(path("second2.third2.value").getIdDefiningParentPath()).isEqualTo(path());
+			softly.assertThat(path("second2.third.value").getIdDefiningParentPath()).isEqualTo(path());
+			softly.assertThat(path("withId.second.third2.value").getIdDefiningParentPath()).isEqualTo(path("withId"));
+			softly.assertThat(path("withId.second.third.value").getIdDefiningParentPath()).isEqualTo(path("withId"));
 		});
+	}
+
+	@Test // DATAJDBC-359
+	void getRequiredIdProperty() {
+
+		assertSoftly(softly -> {
+
+			softly.assertThat(path().getRequiredIdProperty().getName()).isEqualTo("entityId");
+			softly.assertThat(path("withId").getRequiredIdProperty().getName()).isEqualTo("withIdId");
+			softly.assertThatThrownBy(() -> path("second").getRequiredIdProperty())
+					.isInstanceOf(IllegalStateException.class);
+		});
+	}
+
+	@Test // DATAJDBC-359
+	void reverseColumnName() {
+		System.out.println(path("second.third2"));
+		assertSoftly(softly -> {
+
+			softly.assertThat(path("second.third2").getReverseColumnName()).isEqualTo(quoted("DUMMY_ENTITY"));
+			softly.assertThat(path("second.third").getReverseColumnName()).isEqualTo(quoted("DUMMY_ENTITY"));
+			softly.assertThat(path("secondList.third2").getReverseColumnName()).isEqualTo(quoted("DUMMY_ENTITY"));
+			softly.assertThat(path("secondList.third").getReverseColumnName()).isEqualTo(quoted("DUMMY_ENTITY"));
+			softly.assertThat(path("second2.third2").getReverseColumnName()).isEqualTo(quoted("DUMMY_ENTITY"));
+			softly.assertThat(path("second2.third").getReverseColumnName()).isEqualTo(quoted("DUMMY_ENTITY"));
+			softly.assertThat(path("withId.second.third2.value").getReverseColumnName()).isEqualTo(quoted("WITH_ID"));
+			softly.assertThat(path("withId.second.third").getReverseColumnName()).isEqualTo(quoted("WITH_ID"));
+			softly.assertThat(path("withId.second2.third").getReverseColumnName()).isEqualTo(quoted("WITH_ID"));
+		});
+	}
+
+	private AggregatePath path() {
+		return context.getAggregateRootPath(entity.getType());
 	}
 
 	private AggregatePath path(String path) {

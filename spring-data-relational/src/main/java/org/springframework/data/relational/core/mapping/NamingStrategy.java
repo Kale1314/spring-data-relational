@@ -89,10 +89,14 @@ public interface NamingStrategy {
 	}
 
 	default String getReverseColumnName(PersistentPropertyPathExtension path) {
-		return getTableName(path.getIdDefiningParentPath().getRequiredLeafEntity().getType());
+		PersistentPropertyPathExtension idDefiningParentPath = path.getIdDefiningParentPath();
+		System.out.println("id defining parent path " + idDefiningParentPath);
+		return getTableName(idDefiningParentPath.getRequiredLeafEntity().getType());
 	}
 	default String getReverseColumnName(AggregatePath path){
-		return getTableName(path.getIdDefiningParentPath().getRequiredLeafEntity().getType());
+		AggregatePath idDefiningParentPath = path.getIdDefiningParentPath();
+		System.out.println("id defining parent path "+idDefiningParentPath);
+		return getTableName(idDefiningParentPath.getRequiredLeafEntity().getType());
 	}
 
 	/**
