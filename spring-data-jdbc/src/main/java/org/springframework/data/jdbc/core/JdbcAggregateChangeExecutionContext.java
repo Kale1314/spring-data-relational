@@ -187,7 +187,7 @@ class JdbcAggregateChangeExecutionContext {
 	}
 
 	private Object getParentId(DbAction.WithDependingOn<?> action) {
-		
+
 		DbAction.WithEntity<?> idOwningAction = getIdOwningAction(action, context.getAggregatePath(action.getPropertyPath()).getIdDefiningParentPath());
 
 		return getPotentialGeneratedIdFrom(idOwningAction);
