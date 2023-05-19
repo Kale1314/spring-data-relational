@@ -187,11 +187,8 @@ class JdbcAggregateChangeExecutionContext {
 	}
 
 	private Object getParentId(DbAction.WithDependingOn<?> action) {
-
-		PersistentPropertyPathExtension path = new PersistentPropertyPathExtension(context, action.getPropertyPath());
-		PersistentPropertyPathExtension idPath = path.getIdDefiningParentPath();
-
-		DbAction.WithEntity<?> idOwningAction = getIdOwningAction(action, idPath.getAggregatePath());
+		
+		DbAction.WithEntity<?> idOwningAction = getIdOwningAction(action, context.getAggregatePath(action.getPropertyPath()).getIdDefiningParentPath());
 
 		return getPotentialGeneratedIdFrom(idOwningAction);
 	}
