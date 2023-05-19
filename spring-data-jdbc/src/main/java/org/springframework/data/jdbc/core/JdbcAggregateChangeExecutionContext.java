@@ -185,10 +185,8 @@ class JdbcAggregateChangeExecutionContext {
 
 		Object id = getParentId(action);
 
-		AggregatePath path = context.getAggregatePath(action.getPropertyPath());
-
 		JdbcIdentifierBuilder identifier = JdbcIdentifierBuilder //
-				.forBackReferences(converter, new PersistentPropertyPathExtension(context, action.getPropertyPath()), id);
+				.forBackReferences(converter, context.getAggregatePath(action.getPropertyPath()), id);
 
 		for (Map.Entry<PersistentPropertyPath<RelationalPersistentProperty>, Object> qualifier : action.getQualifiers()
 				.entrySet()) {
