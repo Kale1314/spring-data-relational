@@ -65,7 +65,7 @@ class SqlContext {
 		return getTable(path).column(path.getColumnName()).as(path.getColumnAlias());
 	}
 
-	Column getReverseColumn(PersistentPropertyPathExtension path) {
-		return getTable(path.getAggregatePath()).column(path.getReverseColumnName()).as(path.getReverseColumnNameAlias());
+	Column getReverseColumn(AggregatePath path) {
+		return getTable(path).column(path.getReverseColumnName()).as(path.getReverseColumnNameAlias());
 	}
 }

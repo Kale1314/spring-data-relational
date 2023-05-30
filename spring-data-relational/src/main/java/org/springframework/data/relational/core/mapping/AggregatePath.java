@@ -288,6 +288,18 @@ public class AggregatePath {
 		return columnAlias.get();
 	}
 
+
+	/**
+	 * The alias used in select for the column used to reference the id in the parent table.
+	 *
+	 * @throws IllegalStateException when called on an empty path.
+	 */
+	public SqlIdentifier getReverseColumnNameAlias() {
+
+		return prefixWithTableAlias(getReverseColumnName());
+	}
+
+
 	@Override
 	public String toString() {
 		return "AggregatePath[" + (type == null ? path.getBaseProperty().getOwner().getType().getName() : type.getName())
