@@ -259,7 +259,7 @@ class JdbcQueryCreator extends RelationalQueryCreator<ParametrizedQuery> {
 				joinTables.add(join);
 			}
 
-			Column column = getColumn(sqlContext, extPath);
+			Column column = getColumn(sqlContext, extPath.getAggregatePath());
 			if (column != null) {
 				columnExpressions.add(column);
 			}
@@ -283,7 +283,7 @@ class JdbcQueryCreator extends RelationalQueryCreator<ParametrizedQuery> {
 	 * @return the statement as a {@link String}. Guaranteed to be not {@literal null}.
 	 */
 	@Nullable
-	private Column getColumn(SqlContext sqlContext, PersistentPropertyPathExtension path) {
+	private Column getColumn(SqlContext sqlContext, AggregatePath path) {
 
 		// an embedded itself doesn't give an column, its members will though.
 		// if there is a collection or map on the path it won't get selected at all, but it will get loaded with a separate
@@ -305,10 +305,10 @@ class JdbcQueryCreator extends RelationalQueryCreator<ParametrizedQuery> {
 				return null;
 			}
 
-			return sqlContext.getReverseColumn(path.getAggregatePath());
+			return sqlContext.getReverseColumn(path);
 		}
 
-		return sqlContext.getColumn(path.getAggregatePath());
+		return sqlContext.getColumn(path);
 	}
 
 	@Nullable
