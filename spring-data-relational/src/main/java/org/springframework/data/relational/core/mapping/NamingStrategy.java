@@ -88,6 +88,7 @@ public interface NamingStrategy {
 		return property.getOwner().getTableName().getReference();
 	}
 
+	@Deprecated
 	default String getReverseColumnName(PersistentPropertyPathExtension path) {
 		PersistentPropertyPathExtension idDefiningParentPath = path.getIdDefiningParentPath();
 		System.out.println("id defining parent path " + idDefiningParentPath);
