@@ -18,6 +18,7 @@ package org.springframework.data.relational.core.mapping;
 
 import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.relational.core.sql.SqlIdentifier;
+import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -29,6 +30,7 @@ public class AggregatePath {
 	@Nullable private final Class<?> type;
 
 	@Nullable private final PersistentPropertyPath<? extends RelationalPersistentProperty> path;
+	private final Lazy<SqlIdentifier> columnAlias = Lazy.of(() -> prefixWithTableAlias(getColumnName()));
 
 	public AggregatePath(RelationalMappingContext context, @Nullable Class<?> type,
 			@Nullable PersistentPropertyPath<? extends RelationalPersistentProperty> path) {
@@ -38,11 +40,9 @@ public class AggregatePath {
 		this.path = path;
 	}
 
-
 	public static boolean isWritable(@Nullable PersistentPropertyPath<? extends RelationalPersistentProperty> path) {
 		return path == null || path.getLeafProperty().isWritable() && isWritable(path.getParentPath());
 	}
-
 
 	public boolean isRoot() {
 		return path == null;
@@ -91,7 +91,6 @@ public class AggregatePath {
 		return context.getAggregatePath(path.getParentPath());
 	}
 
-
 	/**
 	 * The {@link RelationalPersistentEntity} associated with the leaf of this path.
 	 *
@@ -99,7 +98,8 @@ public class AggregatePath {
 	 */
 	@Nullable
 	private RelationalPersistentEntity<?> getLeafEntity() {
-		return path == null ? context.getRequiredPersistentEntity(type) : context.getPersistentEntity(path.getLeafProperty().getActualType());
+		return path == null ? context.getRequiredPersistentEntity(type)
+				: context.getPersistentEntity(path.getLeafProperty().getActualType());
 	}
 
 	/**
@@ -110,7 +110,6 @@ public class AggregatePath {
 		RelationalPersistentEntity<?> leafEntity = getLeafEntity();
 		return leafEntity != null && leafEntity.hasIdProperty();
 	}
-
 
 	/**
 	 * Returns the longest ancestor path that has an {@link org.springframework.data.annotation.Id} property.
@@ -156,14 +155,14 @@ public class AggregatePath {
 	}
 
 	public RelationalPersistentProperty getRequiredIdProperty() {
-		return this.path == null ? context.getRequiredPersistentEntity(type).getRequiredIdProperty() : getRequiredLeafEntity().getRequiredIdProperty();
+		return this.path == null ? context.getRequiredPersistentEntity(type).getRequiredIdProperty()
+				: getRequiredLeafEntity().getRequiredIdProperty();
 
 	}
 
 	public int getLength() {
 		return path == null ? 0 : path.getLength();
 	}
-
 
 	/**
 	 * The column name used for the list index or map key of the leaf property of this path.
@@ -185,7 +184,6 @@ public class AggregatePath {
 		return path == null ? null : path.getLeafProperty().getQualifierColumnType();
 	}
 
-
 	/**
 	 * Returns {@literal true} exactly when the path is non empty and the leaf property an embedded one.
 	 *
@@ -201,7 +199,6 @@ public class AggregatePath {
 	public boolean isEntity() {
 		return path == null || path.getLeafProperty().isEntity();
 	}
-
 
 	/**
 	 * Finds and returns the longest path with ich identical or an ancestor to the current path and maps directly to a
@@ -245,7 +242,6 @@ public class AggregatePath {
 
 	}
 
-
 	/**
 	 * The alias used for the table on which this path is based.
 	 *
@@ -271,7 +267,6 @@ public class AggregatePath {
 		return getTableOwningAncestor().getRequiredLeafEntity().getQualifiedTableName();
 	}
 
-
 	/**
 	 * The name of the column used to represent this property in the database.
 	 *
@@ -282,6 +277,21 @@ public class AggregatePath {
 		Assert.state(path != null, "Path is null");
 
 		return assembleColumnName(path.getLeafProperty().getColumnName());
+	}
+
+	/**
+	 * The alias for the column used to represent this property in the database.
+	 *
+	 * @throws IllegalStateException when called on an empty path.
+	 */
+	public SqlIdentifier getColumnAlias() {
+		return columnAlias.get();
+	}
+
+	@Override
+	public String toString() {
+		return "AggregatePath[" + (type == null ? path.getBaseProperty().getOwner().getType().getName() : type.getName())
+				+ "]" + ((path == null) ? "/" : path.toDotPath());
 	}
 
 	private SqlIdentifier assembleColumnName(SqlIdentifier suffix) {
@@ -303,10 +313,11 @@ public class AggregatePath {
 
 		return getParentPath().assembleColumnName(suffix.transform(embeddedPrefix::concat));
 	}
-	@Override
-	public String toString() {
-		return "AggregatePath[" + (type == null ? path.getBaseProperty().getOwner().getType().getName() : type.getName()) +  "]" + ((path == null) ? "/" : path.toDotPath());
-	}
 
+	private SqlIdentifier prefixWithTableAlias(SqlIdentifier columnName) {
+
+		SqlIdentifier tableAlias = getTableAlias();
+		return tableAlias == null ? columnName : columnName.transform(name -> tableAlias.getReference() + "_" + name);
+	}
 
 }

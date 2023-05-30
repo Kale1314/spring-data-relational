@@ -61,8 +61,8 @@ class SqlContext {
 		return tableAlias == null ? table : table.as(tableAlias);
 	}
 
-	Column getColumn(PersistentPropertyPathExtension path) {
-		return getTable(path.getAggregatePath()).column(path.getColumnName()).as(path.getColumnAlias());
+	Column getColumn(AggregatePath path) {
+		return getTable(path).column(path.getColumnName()).as(path.getColumnAlias());
 	}
 
 	Column getReverseColumn(PersistentPropertyPathExtension path) {

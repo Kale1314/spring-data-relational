@@ -309,7 +309,7 @@ class JdbcQueryCreator extends RelationalQueryCreator<ParametrizedQuery> {
 			return sqlContext.getReverseColumn(path);
 		}
 
-		return sqlContext.getColumn(path);
+		return sqlContext.getColumn(path.getAggregatePath());
 	}
 
 	@Nullable
