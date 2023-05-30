@@ -17,6 +17,7 @@
 package org.springframework.data.relational.core.mapping;
 
 import org.springframework.data.mapping.PersistentPropertyPath;
+import org.springframework.data.relational.core.sql.Named;
 import org.springframework.data.relational.core.sql.SqlIdentifier;
 import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
@@ -27,7 +28,7 @@ public class AggregatePath {
 
 	private final RelationalMappingContext context;
 
-	@Nullable private final Class<?> type;
+	@Nullable private final Class<?> rootType;
 
 	@Nullable private final PersistentPropertyPath<? extends RelationalPersistentProperty> path;
 	private final Lazy<SqlIdentifier> columnAlias = Lazy.of(() -> prefixWithTableAlias(getColumnName()));
@@ -36,7 +37,7 @@ public class AggregatePath {
 			@Nullable PersistentPropertyPath<? extends RelationalPersistentProperty> path) {
 		this.context = context;
 
-		this.type = type;
+		this.rootType = type;
 		this.path = path;
 	}
 
@@ -78,7 +79,7 @@ public class AggregatePath {
 	 * @return the parent path. Guaranteed to be not {@literal null}.
 	 * @throws IllegalStateException when called on an empty path.
 	 */
-	private AggregatePath getParentPath() {
+	public AggregatePath getParentPath() {
 
 		if (path == null) {
 			throw new IllegalStateException("The parent path of a root path is not defined.");
@@ -98,14 +99,14 @@ public class AggregatePath {
 	 */
 	@Nullable
 	private RelationalPersistentEntity<?> getLeafEntity() {
-		return path == null ? context.getRequiredPersistentEntity(type)
+		return path == null ? context.getRequiredPersistentEntity(rootType)
 				: context.getPersistentEntity(path.getLeafProperty().getActualType());
 	}
 
 	/**
 	 * @return {@literal true} if this path represents an entity which has an Id attribute.
 	 */
-	private boolean hasIdProperty() {
+	public boolean hasIdProperty() {
 
 		RelationalPersistentEntity<?> leafEntity = getLeafEntity();
 		return leafEntity != null && leafEntity.hasIdProperty();
@@ -155,7 +156,7 @@ public class AggregatePath {
 	}
 
 	public RelationalPersistentProperty getRequiredIdProperty() {
-		return this.path == null ? context.getRequiredPersistentEntity(type).getRequiredIdProperty()
+		return this.path == null ? context.getRequiredPersistentEntity(rootType).getRequiredIdProperty()
 				: getRequiredLeafEntity().getRequiredIdProperty();
 
 	}
@@ -288,7 +289,6 @@ public class AggregatePath {
 		return columnAlias.get();
 	}
 
-
 	/**
 	 * The alias used in select for the column used to reference the id in the parent table.
 	 *
@@ -299,11 +299,11 @@ public class AggregatePath {
 		return prefixWithTableAlias(getReverseColumnName());
 	}
 
-
 	@Override
 	public String toString() {
-		return "AggregatePath[" + (type == null ? path.getBaseProperty().getOwner().getType().getName() : type.getName())
-				+ "]" + ((path == null) ? "/" : path.toDotPath());
+		return "AggregatePath["
+				+ (rootType == null ? path.getBaseProperty().getOwner().getType().getName() : rootType.getName()) + "]"
+				+ ((path == null) ? "/" : path.toDotPath());
 	}
 
 	private SqlIdentifier assembleColumnName(SqlIdentifier suffix) {
@@ -332,4 +332,69 @@ public class AggregatePath {
 		return tableAlias == null ? columnName : columnName.transform(name -> tableAlias.getReference() + "_" + name);
 	}
 
+	public String toDotPath() {
+		return path == null ? "" : path.toDotPath();
+	}
+
+
+	/**
+	 * Returns {@literal true} if there are multiple values for this path, i.e. if the path contains at least one element
+	 * that is a collection and array or a map.
+	 *
+	 * @return {@literal true} if the path contains a multivalued element.
+	 */
+	public boolean isMultiValued() {
+
+		return path != null && //
+				(path.getLeafProperty().isCollectionLike() //
+						|| path.getLeafProperty().isQualified() //
+						|| getParentPath().isMultiValued() //
+				);
+	}
+
+
+	/**
+	 * @return {@literal true} if the leaf property of this path is a {@link java.util.Map}.
+	 * @see RelationalPersistentProperty#isMap()
+	 */
+	public boolean isMap() {
+		return path != null && path.getLeafProperty().isMap();
+	}
+
+	public RelationalPersistentProperty getRequiredLeafProperty() {
+
+		if (path == null) {
+			throw new IllegalStateException("root path does not have a leaf property");
+		}
+		return path.getLeafProperty();
+	}
+
+	public RelationalPersistentProperty getBaseProperty() {
+
+		if (path == null) {
+			throw new IllegalStateException("root path does not have a leaf property");
+		}
+		return path.getBaseProperty();
+	}
+	/**
+	 * The column name of the id column of the ancestor path that represents an actual table.
+	 */
+	public SqlIdentifier getIdColumnName() {
+		return getTableOwningAncestor().getRequiredLeafEntity().getIdColumn();
+	}
+
+
+	/**
+	 * @return {@literal true} when this is references a {@link java.util.List} or {@link java.util.Map}.
+	 */
+	public boolean isQualified() {
+		return path != null && path.getLeafProperty().isQualified();
+	}
+
+	/**
+	 * @return {@literal true} when this is references a {@link java.util.Collection} or an array.
+	 */
+	public boolean isCollectionLike() {
+		return path != null && path.getLeafProperty().isCollectionLike();
+	}
 }

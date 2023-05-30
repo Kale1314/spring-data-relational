@@ -28,6 +28,7 @@ import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.relational.core.dialect.Dialect;
 import org.springframework.data.relational.core.dialect.RenderContextFactory;
+import org.springframework.data.relational.core.mapping.AggregatePath;
 import org.springframework.data.relational.core.mapping.PersistentPropertyPathExtension;
 import org.springframework.data.relational.core.mapping.RelationalMappingContext;
 import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
@@ -118,7 +119,7 @@ class JdbcQueryCreator extends RelationalQueryCreator<ParametrizedQuery> {
 	 * @param parameters parameters for the predicate.
 	 */
 	static void validate(PartTree tree, Parameters<?, ?> parameters,
-			MappingContext<? extends RelationalPersistentEntity<?>, ? extends RelationalPersistentProperty> context) {
+			RelationalMappingContext context) {
 
 		RelationalQueryCreator.validate(tree, parameters);
 
@@ -127,30 +128,28 @@ class JdbcQueryCreator extends RelationalQueryCreator<ParametrizedQuery> {
 
 				PersistentPropertyPath<? extends RelationalPersistentProperty> propertyPath = context
 						.getPersistentPropertyPath(part.getProperty());
-				PersistentPropertyPathExtension path = new PersistentPropertyPathExtension(context, propertyPath);
+				AggregatePath path = context.getAggregatePath( propertyPath);
 
-				for (PersistentPropertyPathExtension pathToValidate = path; path.getLength() > 0; path = path.getParentPath()) {
+				for (AggregatePath pathToValidate = path; path.getLength() > 0; path = path.getParentPath()) {
 					validateProperty(pathToValidate);
 				}
 			}
 		}
 	}
 
-	private static void validateProperty(PersistentPropertyPathExtension path) {
+	private static void validateProperty(AggregatePath path) {
 
 		if (!path.getParentPath().isEmbedded() && path.getLength() > 1) {
-			throw new IllegalArgumentException(
-					String.format("Cannot query by nested property: %s", path.getRequiredPersistentPropertyPath().toDotPath()));
+			throw new IllegalArgumentException(String.format("Cannot query by nested property: %s", path.toDotPath()));
 		}
 
 		if (path.isMultiValued() || path.isMap()) {
-			throw new IllegalArgumentException(String.format("Cannot query by multi-valued property: %s",
-					path.getRequiredPersistentPropertyPath().getLeafProperty().getName()));
+			throw new IllegalArgumentException(
+					String.format("Cannot query by multi-valued property: %s", path.getRequiredLeafProperty().getName()));
 		}
 
 		if (!path.isEmbedded() && path.isEntity()) {
-			throw new IllegalArgumentException(
-					String.format("Cannot query by nested entity: %s", path.getRequiredPersistentPropertyPath().toDotPath()));
+			throw new IllegalArgumentException(String.format("Cannot query by nested entity: %s", path.toDotPath()));
 		}
 	}
 
