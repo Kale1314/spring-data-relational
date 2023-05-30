@@ -20,6 +20,7 @@ import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.relational.core.sql.SqlIdentifier;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 public class AggregatePath {
 
@@ -184,6 +185,124 @@ public class AggregatePath {
 		return path == null ? null : path.getLeafProperty().getQualifierColumnType();
 	}
 
+
+	/**
+	 * Returns {@literal true} exactly when the path is non empty and the leaf property an embedded one.
+	 *
+	 * @return if the leaf property is embedded.
+	 */
+	public boolean isEmbedded() {
+		return path != null && path.getLeafProperty().isEmbedded();
+	}
+
+	/**
+	 * @return {@literal true} when this is an empty path or the path references an entity.
+	 */
+	public boolean isEntity() {
+		return path == null || path.getLeafProperty().isEntity();
+	}
+
+
+	/**
+	 * Finds and returns the longest path with ich identical or an ancestor to the current path and maps directly to a
+	 * table.
+	 *
+	 * @return a path. Guaranteed to be not {@literal null}.
+	 */
+	private AggregatePath getTableOwningAncestor() {
+
+		return isEntity() && !isEmbedded() ? this : getParentPath().getTableOwningAncestor();
+	}
+
+	@Nullable
+	private SqlIdentifier assembleTableAlias() {
+
+		Assert.state(path != null, "Path is null");
+
+		RelationalPersistentProperty leafProperty = path.getLeafProperty();
+		String prefix;
+		if (isEmbedded()) {
+			prefix = leafProperty.getEmbeddedPrefix();
+
+		} else {
+			prefix = leafProperty.getName();
+		}
+
+		if (path.getLength() == 1) {
+			Assert.notNull(prefix, "Prefix mus not be null");
+			return StringUtils.hasText(prefix) ? SqlIdentifier.quoted(prefix) : null;
+		}
+
+		AggregatePath parentPath = getParentPath();
+		SqlIdentifier sqlIdentifier = parentPath.assembleTableAlias();
+
+		if (sqlIdentifier != null) {
+
+			return parentPath.isEmbedded() ? sqlIdentifier.transform(name -> name.concat(prefix))
+					: sqlIdentifier.transform(name -> name + "_" + prefix);
+		}
+		return SqlIdentifier.quoted(prefix);
+
+	}
+
+
+	/**
+	 * The alias used for the table on which this path is based.
+	 *
+	 * @return a table alias, {@literal null} if the table owning path is the empty path.
+	 */
+	@Nullable
+	public SqlIdentifier getTableAlias() {
+
+		AggregatePath tableOwner = getTableOwningAncestor();
+
+		return tableOwner.path == null ? null : tableOwner.assembleTableAlias();
+
+	}
+
+	/**
+	 * The fully qualified name of the table this path is tied to or of the longest ancestor path that is actually tied to
+	 * a table.
+	 *
+	 * @return the name of the table. Guaranteed to be not {@literal null}.
+	 * @since 3.0
+	 */
+	public SqlIdentifier getQualifiedTableName() {
+		return getTableOwningAncestor().getRequiredLeafEntity().getQualifiedTableName();
+	}
+
+
+	/**
+	 * The name of the column used to represent this property in the database.
+	 *
+	 * @throws IllegalStateException when called on an empty path.
+	 */
+	public SqlIdentifier getColumnName() {
+
+		Assert.state(path != null, "Path is null");
+
+		return assembleColumnName(path.getLeafProperty().getColumnName());
+	}
+
+	private SqlIdentifier assembleColumnName(SqlIdentifier suffix) {
+
+		Assert.state(path != null, "Path is null");
+
+		if (path.getLength() <= 1) {
+			return suffix;
+		}
+
+		PersistentPropertyPath<? extends RelationalPersistentProperty> parentPath = path.getParentPath();
+		RelationalPersistentProperty parentLeaf = parentPath.getLeafProperty();
+
+		if (!parentLeaf.isEmbedded()) {
+			return suffix;
+		}
+
+		String embeddedPrefix = parentLeaf.getEmbeddedPrefix();
+
+		return getParentPath().assembleColumnName(suffix.transform(embeddedPrefix::concat));
+	}
 	@Override
 	public String toString() {
 		return "AggregatePath[" + (type == null ? path.getBaseProperty().getOwner().getType().getName() : type.getName()) +  "]" + ((path == null) ? "/" : path.toDotPath());

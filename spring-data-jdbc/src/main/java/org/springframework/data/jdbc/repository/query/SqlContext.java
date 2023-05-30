@@ -15,6 +15,7 @@
  */
 package org.springframework.data.jdbc.repository.query;
 
+import org.springframework.data.relational.core.mapping.AggregatePath;
 import org.springframework.data.relational.core.mapping.PersistentPropertyPathExtension;
 import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
 import org.springframework.data.relational.core.sql.Column;
@@ -53,7 +54,7 @@ class SqlContext {
 		return table;
 	}
 
-	Table getTable(PersistentPropertyPathExtension path) {
+	Table getTable(AggregatePath path) {
 
 		SqlIdentifier tableAlias = path.getTableAlias();
 		Table table = Table.create(path.getQualifiedTableName());
@@ -61,10 +62,10 @@ class SqlContext {
 	}
 
 	Column getColumn(PersistentPropertyPathExtension path) {
-		return getTable(path).column(path.getColumnName()).as(path.getColumnAlias());
+		return getTable(path.getAggregatePath()).column(path.getColumnName()).as(path.getColumnAlias());
 	}
 
 	Column getReverseColumn(PersistentPropertyPathExtension path) {
-		return getTable(path).column(path.getReverseColumnName()).as(path.getReverseColumnNameAlias());
+		return getTable(path.getAggregatePath()).column(path.getReverseColumnName()).as(path.getReverseColumnNameAlias());
 	}
 }

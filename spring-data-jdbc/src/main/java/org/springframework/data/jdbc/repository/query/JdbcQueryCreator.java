@@ -319,10 +319,10 @@ class JdbcQueryCreator extends RelationalQueryCreator<ParametrizedQuery> {
 			return null;
 		}
 
-		Table currentTable = sqlContext.getTable(path);
+		Table currentTable = sqlContext.getTable(path.getAggregatePath());
 
 		PersistentPropertyPathExtension idDefiningParentPath = path.getIdDefiningParentPath();
-		Table parentTable = sqlContext.getTable(idDefiningParentPath);
+		Table parentTable = sqlContext.getTable(idDefiningParentPath.getAggregatePath());
 
 		return new Join( //
 				currentTable, //
