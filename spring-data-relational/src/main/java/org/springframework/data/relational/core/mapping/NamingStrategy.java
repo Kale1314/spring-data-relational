@@ -90,13 +90,11 @@ public interface NamingStrategy {
 
 	@Deprecated
 	default String getReverseColumnName(PersistentPropertyPathExtension path) {
-		PersistentPropertyPathExtension idDefiningParentPath = path.getIdDefiningParentPath();
-		System.out.println("id defining parent path " + idDefiningParentPath);
-		return getTableName(idDefiningParentPath.getRequiredLeafEntity().getType());
+		return getReverseColumnName(path.getAggregatePath());
 	}
 	default String getReverseColumnName(AggregatePath path){
+
 		AggregatePath idDefiningParentPath = path.getIdDefiningParentPath();
-		System.out.println("id defining parent path "+idDefiningParentPath);
 		return getTableName(idDefiningParentPath.getRequiredLeafEntity().getType());
 	}
 
