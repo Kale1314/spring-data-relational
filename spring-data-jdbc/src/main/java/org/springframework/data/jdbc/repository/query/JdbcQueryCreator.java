@@ -244,22 +244,22 @@ class JdbcQueryCreator extends RelationalQueryCreator<ParametrizedQuery> {
 		for (PersistentPropertyPath<RelationalPersistentProperty> path : context
 				.findPersistentPropertyPaths(entity.getType(), p -> true)) {
 
-			PersistentPropertyPathExtension extPath = new PersistentPropertyPathExtension(context, path);
+			AggregatePath aggregatePath = context.getAggregatePath(path);
 
 			if (returnedType.needsCustomConstruction()) {
 				if (!returnedType.getInputProperties()
-						.contains(extPath.getRequiredPersistentPropertyPath().getBaseProperty().getName())) {
+						.contains(aggregatePath.getBaseProperty().getName())) {
 					continue;
 				}
 			}
 
 			// add a join if necessary
-			Join join = getJoin(sqlContext, extPath);
+			Join join = getJoin(sqlContext, aggregatePath);
 			if (join != null) {
 				joinTables.add(join);
 			}
 
-			Column column = getColumn(sqlContext, extPath.getAggregatePath());
+			Column column = getColumn(sqlContext, aggregatePath);
 			if (column != null) {
 				columnExpressions.add(column);
 			}
@@ -312,16 +312,16 @@ class JdbcQueryCreator extends RelationalQueryCreator<ParametrizedQuery> {
 	}
 
 	@Nullable
-	Join getJoin(SqlContext sqlContext, PersistentPropertyPathExtension path) {
+	Join getJoin(SqlContext sqlContext, AggregatePath path) {
 
 		if (!path.isEntity() || path.isEmbedded() || path.isMultiValued()) {
 			return null;
 		}
 
-		Table currentTable = sqlContext.getTable(path.getAggregatePath());
+		Table currentTable = sqlContext.getTable(path);
 
-		PersistentPropertyPathExtension idDefiningParentPath = path.getIdDefiningParentPath();
-		Table parentTable = sqlContext.getTable(idDefiningParentPath.getAggregatePath());
+		AggregatePath idDefiningParentPath = path.getIdDefiningParentPath();
+		Table parentTable = sqlContext.getTable(idDefiningParentPath);
 
 		return new Join( //
 				currentTable, //
