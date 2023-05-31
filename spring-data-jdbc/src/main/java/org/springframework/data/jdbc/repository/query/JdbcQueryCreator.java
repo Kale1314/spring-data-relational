@@ -25,11 +25,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jdbc.core.convert.JdbcConverter;
 import org.springframework.data.jdbc.core.convert.QueryMapper;
 import org.springframework.data.mapping.PersistentPropertyPath;
-import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.relational.core.dialect.Dialect;
 import org.springframework.data.relational.core.dialect.RenderContextFactory;
 import org.springframework.data.relational.core.mapping.AggregatePath;
-import org.springframework.data.relational.core.mapping.PersistentPropertyPathExtension;
 import org.springframework.data.relational.core.mapping.RelationalMappingContext;
 import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
 import org.springframework.data.relational.core.mapping.RelationalPersistentProperty;
@@ -118,8 +116,7 @@ class JdbcQueryCreator extends RelationalQueryCreator<ParametrizedQuery> {
 	 * @param tree the tree structure defining the predicate of the query.
 	 * @param parameters parameters for the predicate.
 	 */
-	static void validate(PartTree tree, Parameters<?, ?> parameters,
-			RelationalMappingContext context) {
+	static void validate(PartTree tree, Parameters<?, ?> parameters, RelationalMappingContext context) {
 
 		RelationalQueryCreator.validate(tree, parameters);
 
@@ -128,7 +125,7 @@ class JdbcQueryCreator extends RelationalQueryCreator<ParametrizedQuery> {
 
 				PersistentPropertyPath<? extends RelationalPersistentProperty> propertyPath = context
 						.getPersistentPropertyPath(part.getProperty());
-				AggregatePath path = context.getAggregatePath( propertyPath);
+				AggregatePath path = context.getAggregatePath(propertyPath);
 
 				for (AggregatePath pathToValidate = path; path.getLength() > 0; path = path.getParentPath()) {
 					validateProperty(pathToValidate);
@@ -247,8 +244,7 @@ class JdbcQueryCreator extends RelationalQueryCreator<ParametrizedQuery> {
 			AggregatePath aggregatePath = context.getAggregatePath(path);
 
 			if (returnedType.needsCustomConstruction()) {
-				if (!returnedType.getInputProperties()
-						.contains(aggregatePath.getBaseProperty().getName())) {
+				if (!returnedType.getInputProperties().contains(aggregatePath.getBaseProperty().getName())) {
 					continue;
 				}
 			}
@@ -276,7 +272,7 @@ class JdbcQueryCreator extends RelationalQueryCreator<ParametrizedQuery> {
 	}
 
 	/**
-	 * Create a {@link Column} for {@link PersistentPropertyPathExtension}.
+	 * Create a {@link Column} for {@link AggregatePath}.
 	 *
 	 * @param sqlContext
 	 * @param path the path to the column in question.
