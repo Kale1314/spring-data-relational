@@ -21,6 +21,7 @@ import java.sql.SQLType;
 import org.springframework.data.jdbc.core.mapping.JdbcValue;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.relational.core.conversion.RelationalConverter;
+import org.springframework.data.relational.core.mapping.AggregatePath;
 import org.springframework.data.relational.core.mapping.PersistentPropertyPathExtension;
 import org.springframework.data.relational.core.mapping.RelationalMappingContext;
 import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
@@ -70,7 +71,22 @@ public interface JdbcConverter extends RelationalConverter {
 	 * @param <T>
 	 * @return
 	 */
-	<T> T mapRow(PersistentPropertyPathExtension path, ResultSet resultSet, Identifier identifier, Object key);
+	@Deprecated
+	default <T> T mapRow(PersistentPropertyPathExtension path, ResultSet resultSet, Identifier identifier, Object key){
+		return mapRow(path.getAggregatePath(), resultSet, identifier, key);
+	};
+
+	/**
+	 * Read the current row from {@link ResultSet} to an {@link AggregatePath#getActualType() entity}.
+	 *
+	 * @param path path to the owning property.
+	 * @param resultSet the {@link ResultSet} to read from.
+	 * @param identifier entity identifier.
+	 * @param key primary key.
+	 * @param <T>
+	 * @return
+	 */
+	<T> T mapRow(AggregatePath path, ResultSet resultSet, Identifier identifier, Object key);
 
 	/**
 	 * The type to be used to store this property in the database. Multidimensional arrays are unwrapped to reflect a

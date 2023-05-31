@@ -97,7 +97,7 @@ public class AggregatePath {
 	 * @return Might return {@literal null} when called on a path that does not represent an entity.
 	 */
 	@Nullable
-	private RelationalPersistentEntity<?> getLeafEntity() {
+	public RelationalPersistentEntity<?> getLeafEntity() {
 		return path == null ? context.getRequiredPersistentEntity(rootType)
 				: context.getPersistentEntity(path.getLeafProperty().getActualType());
 	}
@@ -410,4 +410,9 @@ public class AggregatePath {
 		return context.getAggregatePath(newPath);
 	}
 
+	public PersistentPropertyPath<? extends RelationalPersistentProperty> getRequiredPersistentPropertyPath() {
+
+		Assert.state(path != null, "path must not be null");
+		return path;
+	}
 }
