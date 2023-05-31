@@ -565,10 +565,10 @@ class SqlGenerator {
 				return null;
 			}
 
-			return sqlContext.getReverseColumn(path);
+			return sqlContext.getReverseColumn(path.getAggregatePath());
 		}
 
-		return sqlContext.getColumn(path);
+		return sqlContext.getColumn(path.getAggregatePath());
 	}
 
 	@Nullable
@@ -578,10 +578,10 @@ class SqlGenerator {
 			return null;
 		}
 
-		Table currentTable = sqlContext.getTable(path);
+		Table currentTable = sqlContext.getTable(path.getAggregatePath());
 
 		PersistentPropertyPathExtension idDefiningParentPath = path.getIdDefiningParentPath();
-		Table parentTable = sqlContext.getTable(idDefiningParentPath);
+		Table parentTable = sqlContext.getTable(idDefiningParentPath.getAggregatePath());
 
 		return new Join( //
 				currentTable, //

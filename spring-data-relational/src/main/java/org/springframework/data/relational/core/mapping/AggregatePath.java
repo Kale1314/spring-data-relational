@@ -405,7 +405,7 @@ public class AggregatePath {
 
 		PersistentPropertyPath<? extends RelationalPersistentProperty> newPath = path == null //
 				? context.getPersistentPropertyPath(property.getName(), rootType) //
-				: context.getPersistentPropertyPath(path.toDotPath() + "." + property.getName(), rootType);
+				: context.getPersistentPropertyPath(path.toDotPath() + "." + property.getName(), path.getBaseProperty().getOwner().getType());
 
 		return context.getAggregatePath(newPath);
 	}
