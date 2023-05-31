@@ -415,4 +415,14 @@ public class AggregatePath {
 		Assert.state(path != null, "path must not be null");
 		return path;
 	}
+
+	/**
+	 * If the table owning ancestor has an id the column name of that id property is returned. Otherwise the reverse
+	 * column is returned.
+	 */
+	public SqlIdentifier getEffectiveIdColumnName() {
+
+		AggregatePath owner = getTableOwningAncestor();
+		return owner.path == null ? owner.getRequiredLeafEntity().getIdColumn() : owner.getReverseColumnName();
+	}
 }
