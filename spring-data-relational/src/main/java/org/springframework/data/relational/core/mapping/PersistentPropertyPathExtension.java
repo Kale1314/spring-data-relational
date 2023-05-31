@@ -386,13 +386,6 @@ public class PersistentPropertyPathExtension {
 				: path.getLeafProperty().getActualType();
 	}
 
-	/**
-	 * @return whether the leaf end of the path is ordered, i.e. the data to populate must be ordered.
-	 * @see RelationalPersistentProperty#isOrdered()
-	 */
-	public boolean isOrdered() {
-		return path != null && path.getLeafProperty().isOrdered();
-	}
 
 	/**
 	 * @return {@literal true} if the leaf property of this path is a {@link java.util.Map}.

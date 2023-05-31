@@ -217,7 +217,7 @@ class SqlGenerator {
 		Assert.notNull(parentIdentifier, "identifier must not be null");
 		Assert.notNull(propertyPath, "propertyPath must not be null");
 
-		PersistentPropertyPathExtension path = new PersistentPropertyPathExtension(mappingContext, propertyPath);
+		AggregatePath path = mappingContext.getAggregatePath(propertyPath);
 
 		return getFindAllByProperty(parentIdentifier, path.getQualifierColumn(), path.isOrdered());
 	}
@@ -481,7 +481,7 @@ class SqlGenerator {
 		for (PersistentPropertyPath<RelationalPersistentProperty> path : mappingContext
 				.findPersistentPropertyPaths(entity.getType(), p -> true)) {
 
-			PersistentPropertyPathExtension extPath = new PersistentPropertyPathExtension(mappingContext, path);
+			AggregatePath extPath = mappingContext.getAggregatePath(path);
 
 			// add a join if necessary
 			Join join = getJoin(extPath);
@@ -544,7 +544,7 @@ class SqlGenerator {
 	 * @return the statement as a {@link String}. Guaranteed to be not {@literal null}.
 	 */
 	@Nullable
-	Column getColumn(PersistentPropertyPathExtension path) {
+	Column getColumn(AggregatePath path) {
 
 		// an embedded itself doesn't give a column, its members will though.
 		// if there is a collection or map on the path it won't get selected at all, but it will get loaded with a separate
@@ -566,23 +566,23 @@ class SqlGenerator {
 				return null;
 			}
 
-			return sqlContext.getReverseColumn(path.getAggregatePath());
+			return sqlContext.getReverseColumn(path);
 		}
 
-		return sqlContext.getColumn(path.getAggregatePath());
+		return sqlContext.getColumn(path);
 	}
 
 	@Nullable
-	Join getJoin(PersistentPropertyPathExtension path) {
+	Join getJoin(AggregatePath path) {
 
 		if (!path.isEntity() || path.isEmbedded() || path.isMultiValued()) {
 			return null;
 		}
 
-		Table currentTable = sqlContext.getTable(path.getAggregatePath());
+		Table currentTable = sqlContext.getTable(path);
 
-		PersistentPropertyPathExtension idDefiningParentPath = path.getIdDefiningParentPath();
-		Table parentTable = sqlContext.getTable(idDefiningParentPath.getAggregatePath());
+		AggregatePath idDefiningParentPath = path.getIdDefiningParentPath();
+		Table parentTable = sqlContext.getTable(idDefiningParentPath);
 
 		return new Join( //
 				currentTable, //
@@ -926,7 +926,7 @@ class SqlGenerator {
 		for (PersistentPropertyPath<RelationalPersistentProperty> path : mappingContext
 				.findPersistentPropertyPaths(entity.getType(), p -> true)) {
 
-			PersistentPropertyPathExtension extPath = new PersistentPropertyPathExtension(mappingContext, path);
+			AggregatePath extPath = mappingContext.getAggregatePath( path);
 
 			// add a join if necessary
 			Join join = getJoin(extPath);
@@ -960,7 +960,7 @@ class SqlGenerator {
 		for (PersistentPropertyPath<RelationalPersistentProperty> path : mappingContext
 				.findPersistentPropertyPaths(entity.getType(), p -> true)) {
 
-			PersistentPropertyPathExtension extPath = new PersistentPropertyPathExtension(mappingContext, path);
+			AggregatePath extPath = mappingContext.getAggregatePath(path);
 
 			// add a join if necessary
 			Join join = getJoin(extPath);

@@ -28,7 +28,6 @@ import org.springframework.data.jdbc.core.mapping.JdbcMappingContext;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Embedded;
 import org.springframework.data.relational.core.mapping.Embedded.OnEmpty;
-import org.springframework.data.relational.core.mapping.PersistentPropertyPathExtension;
 import org.springframework.data.relational.core.mapping.RelationalMappingContext;
 import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
 import org.springframework.data.relational.core.sql.Aliased;
@@ -295,7 +294,7 @@ public class SqlGeneratorEmbeddedUnitTests {
 
 	private SqlGenerator.Join generateJoin(String path, Class<?> type) {
 		return createSqlGenerator(type)
-				.getJoin(new PersistentPropertyPathExtension(context, PersistentPropertyPathTestUtils.getPath(path, type, context)));
+				.getJoin(context.getAggregatePath(PersistentPropertyPathTestUtils.getPath(path, type, context)));
 	}
 
 	@Nullable
@@ -310,13 +309,14 @@ public class SqlGeneratorEmbeddedUnitTests {
 	private org.springframework.data.relational.core.sql.Column generatedColumn(String path, Class<?> type) {
 
 		return createSqlGenerator(type)
-				.getColumn(new PersistentPropertyPathExtension(context, PersistentPropertyPathTestUtils.getPath(path, type, context)));
+				.getColumn(context.getAggregatePath(PersistentPropertyPathTestUtils.getPath(path, type, context)));
 	}
 
 	@SuppressWarnings("unused")
 	static class DummyEntity {
 
-		@Column("id1") @Id Long id;
+		@Column("id1")
+		@Id Long id;
 
 		@Embedded(onEmpty = OnEmpty.USE_NULL, prefix = "prefix_") CascadedEmbedded prefixedEmbeddable;
 

@@ -425,4 +425,13 @@ public class AggregatePath {
 		AggregatePath owner = getTableOwningAncestor();
 		return owner.path == null ? owner.getRequiredLeafEntity().getIdColumn() : owner.getReverseColumnName();
 	}
+
+	/**
+	 * @return whether the leaf end of the path is ordered, i.e. the data to populate must be ordered.
+	 * @see RelationalPersistentProperty#isOrdered()
+	 */
+	public boolean isOrdered() {
+		return path != null && path.getLeafProperty().isOrdered();
+	}
+
 }

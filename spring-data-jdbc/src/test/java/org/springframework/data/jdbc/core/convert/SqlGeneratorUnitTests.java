@@ -735,7 +735,7 @@ class SqlGeneratorUnitTests {
 	@Nullable
 	private SqlGenerator.Join generateJoin(String path, Class<?> type) {
 		return createSqlGenerator(type, AnsiDialect.INSTANCE)
-				.getJoin(new PersistentPropertyPathExtension(context, PersistentPropertyPathTestUtils.getPath(path, type, context)));
+				.getJoin(context.getAggregatePath(PersistentPropertyPathTestUtils.getPath(path, type, context)));
 	}
 
 	@Test // DATAJDBC-340
@@ -933,8 +933,8 @@ class SqlGeneratorUnitTests {
 	@Nullable
 	private org.springframework.data.relational.core.sql.Column generatedColumn(String path, Class<?> type) {
 
-		return createSqlGenerator(type, AnsiDialect.INSTANCE)
-				.getColumn(new PersistentPropertyPathExtension(context, PersistentPropertyPathTestUtils.getPath(path, type, context)));
+		return createSqlGenerator(type, AnsiDialect.INSTANCE).getColumn(
+				context.getAggregatePath(PersistentPropertyPathTestUtils.getPath(path, type, context)));
 	}
 
 	private PersistentPropertyPath<RelationalPersistentProperty> getPath(String path, Class<?> baseType) {
