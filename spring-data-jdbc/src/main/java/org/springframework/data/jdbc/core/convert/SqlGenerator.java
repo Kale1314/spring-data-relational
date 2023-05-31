@@ -538,7 +538,7 @@ class SqlGenerator {
 	}
 
 	/**
-	 * Create a {@link Column} for {@link PersistentPropertyPathExtension}.
+	 * Create a {@link Column} for {@link AggregatePath}.
 	 *
 	 * @param path the path to the column in question.
 	 * @return the statement as a {@link String}. Guaranteed to be not {@literal null}.
@@ -926,10 +926,10 @@ class SqlGenerator {
 		for (PersistentPropertyPath<RelationalPersistentProperty> path : mappingContext
 				.findPersistentPropertyPaths(entity.getType(), p -> true)) {
 
-			AggregatePath extPath = mappingContext.getAggregatePath( path);
+			AggregatePath aggregatePath = mappingContext.getAggregatePath( path);
 
 			// add a join if necessary
-			Join join = getJoin(extPath);
+			Join join = getJoin(aggregatePath);
 			if (join != null) {
 				baseSelect = baseSelect.leftOuterJoin(join.joinTable).on(join.joinColumn).equals(join.parentId);
 			}
