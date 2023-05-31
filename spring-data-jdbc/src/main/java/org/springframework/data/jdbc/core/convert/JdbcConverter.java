@@ -77,7 +77,7 @@ public interface JdbcConverter extends RelationalConverter {
 	};
 
 	/**
-	 * Read the current row from {@link ResultSet} to an {@link AggregatePath#getActualType() entity}.
+	 * Read the current row from {@link ResultSet} to an {@link AggregatePath#getLeafEntity()} entity}.
 	 *
 	 * @param path path to the owning property.
 	 * @param resultSet the {@link ResultSet} to read from.
