@@ -301,7 +301,7 @@ public class BasicJdbcConverter extends BasicRelationalConverter implements Jdbc
 
 	@Override
 	public <T> T mapRow(RelationalPersistentEntity<T> entity, ResultSet resultSet, Object key) {
-		return new ReadingContext<T>(new PersistentPropertyPathExtension(getMappingContext(), entity).getAggregatePath(),
+		return new ReadingContext<T>(getMappingContext().getAggregateRootPath( entity.getType()),
 				new ResultSetAccessor(resultSet), Identifier.empty(), key).mapRow();
 	}
 
