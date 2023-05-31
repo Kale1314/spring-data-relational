@@ -67,9 +67,7 @@ public class AggregatePath {
 
 		Assert.state(path != null, "Empty paths don't have a reverse column name");
 
-		RelationalPersistentProperty property = path.getLeafProperty();
-		System.out.println("leaf prop" + property);
-		return property.getReverseColumnName(this);
+		return path.getLeafProperty().getReverseColumnName(this);
 	}
 
 	/**

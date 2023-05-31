@@ -79,7 +79,7 @@ class AggregatePathUnitTests {
 
 	@Test // DATAJDBC-359
 	void reverseColumnName() {
-		System.out.println(path("second.third2"));
+
 		assertSoftly(softly -> {
 
 			softly.assertThat(path("second.third2").getReverseColumnName()).isEqualTo(quoted("DUMMY_ENTITY"));
