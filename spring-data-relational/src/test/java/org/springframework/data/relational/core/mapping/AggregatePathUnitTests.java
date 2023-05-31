@@ -94,6 +94,18 @@ class AggregatePathUnitTests {
 		});
 	}
 
+
+	@Test
+	void extendBy() {
+
+		assertSoftly(softly -> {
+
+			softly.assertThat(path().extendBy(entity.getRequiredPersistentProperty("withId")))
+					.isEqualTo(path("withId"));
+			softly.assertThat(path("withId").extendBy(path("withId").getRequiredIdProperty()))
+					.isEqualTo(path("withId.withIdId"));
+		});
+	}
 	private AggregatePath path() {
 		return context.getAggregateRootPath(entity.getType());
 	}

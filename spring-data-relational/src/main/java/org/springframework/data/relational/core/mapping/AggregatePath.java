@@ -17,7 +17,6 @@
 package org.springframework.data.relational.core.mapping;
 
 import org.springframework.data.mapping.PersistentPropertyPath;
-import org.springframework.data.relational.core.sql.Named;
 import org.springframework.data.relational.core.sql.SqlIdentifier;
 import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
@@ -33,11 +32,11 @@ public class AggregatePath {
 	@Nullable private final PersistentPropertyPath<? extends RelationalPersistentProperty> path;
 	private final Lazy<SqlIdentifier> columnAlias = Lazy.of(() -> prefixWithTableAlias(getColumnName()));
 
-	public AggregatePath(RelationalMappingContext context, @Nullable Class<?> type,
+	public AggregatePath(RelationalMappingContext context, @Nullable Class<?> rootType,
 			@Nullable PersistentPropertyPath<? extends RelationalPersistentProperty> path) {
 		this.context = context;
 
-		this.rootType = type;
+		this.rootType = rootType;
 		this.path = path;
 	}
 
@@ -336,7 +335,6 @@ public class AggregatePath {
 		return path == null ? "" : path.toDotPath();
 	}
 
-
 	/**
 	 * Returns {@literal true} if there are multiple values for this path, i.e. if the path contains at least one element
 	 * that is a collection and array or a map.
@@ -351,7 +349,6 @@ public class AggregatePath {
 						|| getParentPath().isMultiValued() //
 				);
 	}
-
 
 	/**
 	 * @return {@literal true} if the leaf property of this path is a {@link java.util.Map}.
@@ -376,13 +373,13 @@ public class AggregatePath {
 		}
 		return path.getBaseProperty();
 	}
+
 	/**
 	 * The column name of the id column of the ancestor path that represents an actual table.
 	 */
 	public SqlIdentifier getIdColumnName() {
 		return getTableOwningAncestor().getRequiredLeafEntity().getIdColumn();
 	}
-
 
 	/**
 	 * @return {@literal true} when this is references a {@link java.util.List} or {@link java.util.Map}.
@@ -397,4 +394,20 @@ public class AggregatePath {
 	public boolean isCollectionLike() {
 		return path != null && path.getLeafProperty().isCollectionLike();
 	}
+
+	/**
+	 * Creates a new path by extending the current path by the property passed as an argument.
+	 *
+	 * @param property must not be {@literal null}.
+	 * @return Guaranteed to be not {@literal null}.
+	 */
+	public AggregatePath extendBy(RelationalPersistentProperty property) {
+
+		PersistentPropertyPath<? extends RelationalPersistentProperty> newPath = path == null //
+				? context.getPersistentPropertyPath(property.getName(), rootType) //
+				: context.getPersistentPropertyPath(path.toDotPath() + "." + property.getName(), rootType);
+
+		return context.getAggregatePath(newPath);
+	}
+
 }
