@@ -6,7 +6,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>spring-data-relational</artifactId>
-	<version>3.1.0</version>
+	<version>3.1.0.x</version>
 
 	<name>Spring Data Relational</name>
 	<description>Spring Data Relational support</description>
