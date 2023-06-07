@@ -136,13 +136,13 @@ public class Query {
 	 * @param columns
 	 * @return a new {@link Query} object containing the former settings with {@code columns} applied.
 	 */
-	private Query withColumns(Collection<SqlIdentifier> columns) {
+	public Query withColumns(Collection<SqlIdentifier> columns) {
 
 		Assert.notNull(columns, "Columns must not be null");
 
 		List<SqlIdentifier> newColumns = new ArrayList<>(this.columns);
 		newColumns.addAll(columns);
-		return new Query(this.criteria, newColumns, this.sort, this.limit, offset,this.joins,this.groups);
+		return new Query(this.criteria, newColumns, this.sort, this.limit, offset, this.joins, this.groups);
 	}
 
 	/**

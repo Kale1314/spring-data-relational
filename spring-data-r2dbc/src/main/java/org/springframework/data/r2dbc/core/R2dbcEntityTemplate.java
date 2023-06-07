@@ -789,7 +789,12 @@ public class R2dbcEntityTemplate implements R2dbcEntityOperations, BeanFactoryAw
 			return Collections.singletonList(table.asterisk());
 		}
 
-		return query.getColumns().stream().map(table::column).collect(Collectors.toList());
+		return query.getColumns().stream().map(sqlIdentifier -> {
+			if (sqlIdentifier instanceof ExpressionSqlIdentifier expressionSqlIdentifier) {
+				return expressionSqlIdentifier.getExpression();
+			}
+			return table.column(sqlIdentifier);
+		}).collect(Collectors.toList());
 	}
 
 	private <T> RowsFetchSpec<T> getRowsFetchSpec(DatabaseClient.GenericExecuteSpec executeSpec, Class<?> entityClass,
