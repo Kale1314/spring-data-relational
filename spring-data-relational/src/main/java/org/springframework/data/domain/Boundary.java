@@ -54,6 +54,13 @@ public class Boundary {
         return CriteriaDefinition.from(scopes.stream().map(Scope::toCriteria).toList());
     }
 
+    public static <T> Scope<T> scope(String property, T lower, T upper) {
+        Range.Bound<T> lowerBound = Range.Bound.inclusive(lower);
+        Range.Bound<T> upperBound = Range.Bound.inclusive(upper);
+        Range<T> range = Range.of(lowerBound, upperBound);
+        return Scope.by(property, range);
+    }
+
     public static final class Scope<T> {
         private final String property;
         private final Range<T> range;
