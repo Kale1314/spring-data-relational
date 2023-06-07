@@ -15,14 +15,6 @@
  */
 package org.springframework.data.r2dbc.repository.support;
 
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Function;
-import java.util.function.UnaryOperator;
-
 import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
@@ -46,6 +38,13 @@ import org.springframework.data.util.Streamable;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
  * Simple {@link ReactiveSortingRepository} implementation using R2DBC through {@link DatabaseClient}.
@@ -359,25 +358,72 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 	}
 
 	/**
+	 * 分页查询
+	 *
+	 * @param example  参数
+	 * @param pageable 分页信息
+	 * @return 分页结果
+	 */
+	public <S extends T> Mono<Page<S>> page(Example<S> example, Pageable pageable) {
+		return findBy(example, query -> query.page(pageable));
+	}
+
+	/**
+	 * 分页查询
+	 *
+	 * @param example         参数
+	 * @param pageable        分页信息
+	 * @param queryCustomizer 更多查询参数
+	 * @return 分页结果
+	 */
+	@Override
+	public <S extends T> Mono<Page<S>> page(Example<S> example, Pageable pageable, UnaryOperator<Query> queryCustomizer) {
+		return findBy(example, q -> q.page(pageable), queryCustomizer);
+	}
+
+	/**
+	 * 查询
+	 *
+	 * @param example         参数
+	 * @param queryFunction   参数函数
+	 * @param queryCustomizer 更多查询参数
+	 * @return 分页结果
+	 */
+	@Override
+	public <S extends T, R, P extends Publisher<R>> P findBy(Example<S> example, Function<FluentQuery.ReactiveFluentQuery<S>, P> queryFunction, UnaryOperator<Query> queryCustomizer) {
+		Assert.notNull(example, "Sample must not be null");
+		Assert.notNull(queryFunction, "Query function must not be null");
+		Assert.notNull(queryCustomizer, "Query Customizer must not be null");
+
+		return queryFunction.apply(new ReactiveFluentQueryByExample<>(example, example.getProbeType(), queryCustomizer));
+	}
+
+	/**
 	 * {@link org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery} using {@link Example}.
 	 *
 	 * @author Mark Paluch
 	 * @since 1.4
 	 */
 	class ReactiveFluentQueryByExample<S, T> extends ReactiveFluentQuerySupport<Example<S>, T> {
+		private final UnaryOperator<Query> queryCustomizer;
 
 		ReactiveFluentQueryByExample(Example<S> example, Class<T> resultType) {
-			this(example, Sort.unsorted(), resultType, Collections.emptyList());
+			this(example, resultType, query -> query);
 		}
 
-		ReactiveFluentQueryByExample(Example<S> example, Sort sort, Class<T> resultType, List<String> fieldsToInclude) {
+		ReactiveFluentQueryByExample(Example<S> example, Sort sort, Class<T> resultType, List<String> fieldsToInclude, UnaryOperator<Query> queryCustomizer) {
 			super(example, sort, resultType, fieldsToInclude);
+			this.queryCustomizer = queryCustomizer;
+		}
+
+		ReactiveFluentQueryByExample(Example<S> example, Class<T> resultType, UnaryOperator<Query> queryCustomizer) {
+			this(example, Sort.unsorted(), resultType, Collections.emptyList(), queryCustomizer);
 		}
 
 		@Override
 		protected <R> ReactiveFluentQueryByExample<S, R> create(Example<S> predicate, Sort sort, Class<R> resultType,
-				List<String> fieldsToInclude) {
-			return new ReactiveFluentQueryByExample<>(predicate, sort, resultType, fieldsToInclude);
+																List<String> fieldsToInclude) {
+			return new ReactiveFluentQueryByExample<>(predicate, sort, resultType, fieldsToInclude, queryCustomizer);
 		}
 
 		@Override
@@ -397,11 +443,17 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 
 		@Override
 		public Mono<Page<T>> page(Pageable pageable) {
-
 			Assert.notNull(pageable, "Pageable must not be null");
 
 			Mono<List<T>> items = createQuery(q -> q.with(pageable)).all().collectList();
+			return items.flatMap(content -> ReactivePageableExecutionUtils.getPage(content, pageable, this.count()));
+		}
 
+		public Mono<Page<T>> page(Pageable pageable, UnaryOperator<Query> queryCustomizer) {
+			Assert.notNull(pageable, "Pageable must not be null");
+			Assert.notNull(queryCustomizer, "queryCustomizer must not be null");
+
+			Mono<List<T>> items = createQuery(q -> queryCustomizer.apply(q).with(pageable)).all().collectList();
 			return items.flatMap(content -> ReactivePageableExecutionUtils.getPage(content, pageable, this.count()));
 		}
 
@@ -432,6 +484,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 				query = query.columns(getFieldsToInclude().toArray(new String[0]));
 			}
 
+			query = this.queryCustomizer.apply(query);
 			query = queryCustomizer.apply(query);
 
 			ReactiveSelectOperation.ReactiveSelect<S> select = entityOperations.select(getPredicate().getProbeType());
