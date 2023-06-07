@@ -15,17 +15,25 @@ public class Boundary {
     private final List<Scope<?>> scopes;
 
     public Boundary(Scope<?>... scopes) {
-        this.scopes = new ArrayList<>(List.of(scopes));
+        this(List.of(scopes));
+    }
+
+    public Boundary(List<Scope<?>> scopes) {
+        this.scopes = new ArrayList<>(scopes);
     }
 
     public static Boundary scopes(Scope<?>... scopes) {
         return new Boundary(scopes);
     }
 
+    public static Boundary scopes(List<Scope<?>> scopes) {
+        return new Boundary(scopes);
+    }
+
     private static void validate(String property) {
         if (!predicate.test(property)) {
             throw new IllegalArgumentException(
-                    "group fields that are not marked as unsafe must only consist of digits, letter, '.', '_', and '\'. Note that such expressions become part of SQL statements and therefore need to be sanatized to prevent SQL injection attacks.");
+                    "boundary fields that are not marked as unsafe must only consist of digits, letter, '.', '_', and '\'. Note that such expressions become part of SQL statements and therefore need to be sanatized to prevent SQL injection attacks.");
         }
     }
 
@@ -81,11 +89,11 @@ public class Boundary {
             return CriteriaDefinition.from(criteriaDefinitions);
         }
 
-        public String property() {
+        public String getProperty() {
             return property;
         }
 
-        public Range<T> range() {
+        public Range<T> getRange() {
             return range;
         }
 
