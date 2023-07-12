@@ -16,16 +16,16 @@
 
 package org.springframework.data.relational.domain;
 
+import org.springframework.data.domain.Sort;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-
-import org.springframework.data.domain.Sort;
-import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
 
 /**
  * SqlSort supports additional to {@link Sort} {@literal unsafe} sort expressions. Such sort expressions get included in
@@ -202,6 +202,7 @@ public class SqlSort extends Sort {
 		private static final long serialVersionUID = 1L;
 
 		private final boolean unsafe;
+		private final boolean unTable;
 
 		/**
 		 * Creates a new {@link SqlOrder} instance. Takes a single property. Direction defaults to
@@ -253,38 +254,51 @@ public class SqlSort extends Sort {
 		 * @param nullHandlingHint can be {@literal null}, will default to {@link NullHandling#NATIVE}.
 		 */
 		private SqlOrder(@Nullable Direction direction, String property, NullHandling nullHandlingHint) {
-			this(direction, property, nullHandlingHint, false, true);
+			this(direction, property, nullHandlingHint, false, true, false);
 		}
 
 		private SqlOrder(@Nullable Direction direction, String property, NullHandling nullHandling, boolean ignoreCase,
-				boolean unsafe) {
+						 boolean unsafe, boolean unTable) {
 
 			super(direction, property, ignoreCase, nullHandling);
 			this.unsafe = unsafe;
+			this.unTable = unTable;
 		}
 
 		@Override
 		public SqlOrder with(Direction order) {
-			return new SqlOrder(order, getProperty(), getNullHandling(), isIgnoreCase(), isUnsafe());
+			return new SqlOrder(order, getProperty(), getNullHandling(), isIgnoreCase(), isUnsafe(), isUnTable());
 		}
 
 		@Override
 		public SqlOrder with(NullHandling nullHandling) {
-			return new SqlOrder(getDirection(), getProperty(), nullHandling, isIgnoreCase(), isUnsafe());
+			return new SqlOrder(getDirection(), getProperty(), nullHandling, isIgnoreCase(), isUnsafe(), isUnTable());
 		}
 
 		public SqlOrder withUnsafe() {
-			return new SqlOrder(getDirection(), getProperty(), getNullHandling(), isIgnoreCase(), true);
+			return new SqlOrder(getDirection(), getProperty(), getNullHandling(), isIgnoreCase(), true, isUnTable());
+		}
+
+		public SqlOrder withSafe() {
+			return new SqlOrder(getDirection(), getProperty(), getNullHandling(), isIgnoreCase(), false, isUnTable());
+		}
+
+		public SqlOrder withUnTable() {
+			return new SqlOrder(getDirection(), getProperty(), getNullHandling(), isIgnoreCase(), isUnsafe(), true);
+		}
+
+		public boolean isUnTable() {
+			return unTable;
 		}
 
 		@Override
 		public SqlOrder ignoreCase() {
-			return new SqlOrder(getDirection(), getProperty(), getNullHandling(), true, isUnsafe());
+			return new SqlOrder(getDirection(), getProperty(), getNullHandling(), true, isUnsafe(), isUnTable());
 		}
 
 		/**
 		 * @return true if {@link SqlOrder} should not be validated automatically. The validation should be done by the
-		 *         developer using this.
+		 * developer using this.
 		 */
 		public boolean isUnsafe() {
 			return unsafe;

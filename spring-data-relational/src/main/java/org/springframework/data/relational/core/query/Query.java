@@ -179,12 +179,6 @@ public class Query {
 
 		assertNoCaseSort(pageable.getSort());
 
-		if (pageable instanceof PageExtender pageExtender && pageExtender.getBoundary().notEmpty()) {
-			CriteriaDefinition boundaryCriteria = pageExtender.getBoundary().toCriteria();
-			return new Query(CriteriaDefinition.from(this.criteria, boundaryCriteria), this.columns, this.sort.and(pageable.getSort()), pageable.getPageSize(),
-					pageable.getOffset(), this.joins, this.groups);
-		}
-
 		return new Query(this.criteria, this.columns, this.sort.and(pageable.getSort()), pageable.getPageSize(),
 				pageable.getOffset(), this.joins, this.groups);
 	}

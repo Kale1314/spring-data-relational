@@ -150,6 +150,11 @@ public class QueryMapper {
 		SqlSort.validate(order);
 
 		Field field = createPropertyField(entity, SqlIdentifier.unquoted(order.getProperty()), this.mappingContext);
+		if (order instanceof SqlSort.SqlOrder sqlOrder) {
+			if (sqlOrder.isUnTable()) {
+				return OrderByField.from(Expressions.just(field.getMappedColumnName().getReference()));
+			}
+		}
 		return OrderByField.from(table.column(field.getMappedColumnName()));
 	}
 
