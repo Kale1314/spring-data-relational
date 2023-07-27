@@ -56,6 +56,7 @@ import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.r2dbc.core.Parameter;
 import org.springframework.r2dbc.core.PreparedOperation;
 import org.springframework.r2dbc.core.RowsFetchSpec;
+import org.springframework.r2dbc.core.binding.Bindings;
 import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -267,7 +268,19 @@ public class R2dbcEntityTemplate implements R2dbcEntityOperations, BeanFactoryAw
 			selectSpec = selectSpec.withJoin(query.getJoins());
 		}
 
-		PreparedOperation<?> operation = statementMapper.getMappedObject(selectSpec);
+		DefaultStatementMapper.DefaultPreparedOperation<?> operation = (DefaultStatementMapper.DefaultPreparedOperation<?>) statementMapper.getMappedObject(selectSpec);
+
+		if (query.hasGroups()) {
+			Bindings bindings = operation.getBindings();
+			//分组数量统计需要通过子查询的方式进行统计，否则返回数量不正确
+			//再次构建查询 以上面的查询作为子查询
+			StatementMapper.SelectSpec countSelectSpec = statementMapper
+					.createSelect(InlineQuery.create((Select) operation.getSource(), tableName.getReference()))
+					.withProjection(Functions.count(Expressions.just("1")));
+			operation = (DefaultStatementMapper.DefaultPreparedOperation<?>) statementMapper.getMappedObject(countSelectSpec);
+			//加入 bindings 重新组合成 operation
+			operation = DefaultStatementMapper.DefaultPreparedOperation.create(operation.getSource(), operation.getRenderContext(), bindings);
+		}
 
 		return this.databaseClient.sql(operation) //
 				.map((r, md) -> r.get(0, Long.class)) //
@@ -772,7 +785,7 @@ public class R2dbcEntityTemplate implements R2dbcEntityOperations, BeanFactoryAw
 		return (RelationalPersistentEntity) getRequiredEntity(entityType);
 	}
 
-	private <T> List<Expression> getSelectProjection(Table table, Query query, Class<T> returnType) {
+	private <T> List<Expression> getSelectProjection(TableLike table, Query query, Class<T> returnType) {
 
 		if (query.getColumns().isEmpty()) {
 

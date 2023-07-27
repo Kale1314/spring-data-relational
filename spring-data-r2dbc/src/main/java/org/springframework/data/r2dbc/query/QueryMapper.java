@@ -123,12 +123,12 @@ public class QueryMapper {
 	/**
 	 * Map the {@link Sort} object to apply field name mapping using {@link Class the type to read}.
 	 *
-	 * @param sort must not be {@literal null}.
+	 * @param sort   must not be {@literal null}.
 	 * @param entity related {@link RelationalPersistentEntity}, can be {@literal null}.
 	 * @return
 	 * @since 1.1
 	 */
-	public List<OrderByField> getMappedSort(Table table, Sort sort, @Nullable RelationalPersistentEntity<?> entity) {
+	public List<OrderByField> getMappedSort(TableLike table, Sort sort, @Nullable RelationalPersistentEntity<?> entity) {
 
 		List<OrderByField> mappedOrder = new ArrayList<>();
 
@@ -145,7 +145,7 @@ public class QueryMapper {
 	}
 
 
-	private OrderByField createSimpleOrderByField(Table table, RelationalPersistentEntity<?> entity, Sort.Order order) {
+	private OrderByField createSimpleOrderByField(TableLike table, RelationalPersistentEntity<?> entity, Sort.Order order) {
 
 		SqlSort.validate(order);
 
@@ -158,7 +158,7 @@ public class QueryMapper {
 		return OrderByField.from(table.column(field.getMappedColumnName()));
 	}
 
-	public List<GroupByField> getMappedGroupBy(Table table, List<String> groupBy, @Nullable RelationalPersistentEntity<?> entity) {
+	public List<GroupByField> getMappedGroupBy(TableLike table, List<String> groupBy, @Nullable RelationalPersistentEntity<?> entity) {
 		List<GroupByField> mappedOrder = new ArrayList<>();
 		for (String property : groupBy) {
 			SqlGroup.validate(property);
@@ -216,15 +216,15 @@ public class QueryMapper {
 	/**
 	 * Map a {@link CriteriaDefinition} object into {@link Condition} and consider value/{@code NULL} {@link Bindings}.
 	 *
-	 * @param markers bind markers object, must not be {@literal null}.
+	 * @param markers  bind markers object, must not be {@literal null}.
 	 * @param criteria criteria definition to map, must not be {@literal null}.
-	 * @param table must not be {@literal null}.
-	 * @param entity related {@link RelationalPersistentEntity}, can be {@literal null}.
+	 * @param table    must not be {@literal null}.
+	 * @param entity   related {@link RelationalPersistentEntity}, can be {@literal null}.
 	 * @return the mapped {@link BoundCondition}.
 	 * @since 1.1
 	 */
-	public BoundCondition getMappedObject(BindMarkers markers, CriteriaDefinition criteria, Table table,
-			@Nullable RelationalPersistentEntity<?> entity) {
+	public BoundCondition getMappedObject(BindMarkers markers, CriteriaDefinition criteria, TableLike table,
+										  @Nullable RelationalPersistentEntity<?> entity) {
 
 		Assert.notNull(markers, "BindMarkers must not be null");
 		Assert.notNull(criteria, "CriteriaDefinition must not be null");
@@ -270,8 +270,8 @@ public class QueryMapper {
 		return new BoundCondition(bindings, mapped);
 	}
 
-	private Condition unroll(CriteriaDefinition criteria, Table table, @Nullable RelationalPersistentEntity<?> entity,
-			MutableBindings bindings) {
+	private Condition unroll(CriteriaDefinition criteria, TableLike table, @Nullable RelationalPersistentEntity<?> entity,
+							 MutableBindings bindings) {
 
 		CriteriaDefinition current = criteria;
 
@@ -309,9 +309,9 @@ public class QueryMapper {
 	}
 
 	@Nullable
-	private Condition unrollGroup(List<? extends CriteriaDefinition> criteria, Table table,
-			CriteriaDefinition.Combinator combinator, @Nullable RelationalPersistentEntity<?> entity,
-			MutableBindings bindings) {
+	private Condition unrollGroup(List<? extends CriteriaDefinition> criteria, TableLike table,
+								  CriteriaDefinition.Combinator combinator, @Nullable RelationalPersistentEntity<?> entity,
+								  MutableBindings bindings) {
 
 		Condition mapped = null;
 		for (CriteriaDefinition criterion : criteria) {
@@ -329,8 +329,8 @@ public class QueryMapper {
 	}
 
 	@Nullable
-	private Condition getCondition(CriteriaDefinition criteria, MutableBindings bindings, Table table,
-			@Nullable RelationalPersistentEntity<?> entity) {
+	private Condition getCondition(CriteriaDefinition criteria, MutableBindings bindings, TableLike table,
+								   @Nullable RelationalPersistentEntity<?> entity) {
 
 		if (criteria.isEmpty()) {
 			return null;
@@ -364,8 +364,8 @@ public class QueryMapper {
 		return currentCondition;
 	}
 
-	private Condition mapCondition(CriteriaDefinition criteria, MutableBindings bindings, Table table,
-			@Nullable RelationalPersistentEntity<?> entity) {
+	private Condition mapCondition(CriteriaDefinition criteria, MutableBindings bindings, TableLike table,
+								   @Nullable RelationalPersistentEntity<?> entity) {
 
 		Field propertyField = createPropertyField(entity, criteria.getColumn(), this.mappingContext);
 		Column column = table.column(propertyField.getMappedColumnName());

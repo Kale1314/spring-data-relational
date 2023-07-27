@@ -91,7 +91,7 @@ class DefaultStatementMapper implements StatementMapper {
 	private PreparedOperation<Select> getMappedObject(SelectSpec selectSpec,
 			@Nullable RelationalPersistentEntity<?> entity) {
 
-		Table table = selectSpec.getTable();
+		TableLike table = selectSpec.getTable();
 		SelectBuilder.SelectAndFrom selectAndFrom = StatementBuilder.select(getSelectList(selectSpec, entity));
 
 		if (selectSpec.isDistinct()) {
@@ -316,6 +316,14 @@ class DefaultStatementMapper implements StatementMapper {
 			return this.source;
 		}
 
+		public static <T> DefaultPreparedOperation<T> create(T source, RenderContext renderContext, Bindings bindings) {
+			return new DefaultPreparedOperation<>(source, renderContext, bindings);
+		}
+
+		public Bindings getBindings() {
+			return bindings;
+		}
+
 		@Override
 		public String toQuery() {
 
@@ -343,6 +351,10 @@ class DefaultStatementMapper implements StatementMapper {
 		@Override
 		public void bindTo(BindTarget to) {
 			this.bindings.apply(to);
+		}
+
+		public RenderContext getRenderContext() {
+			return renderContext;
 		}
 
 	}

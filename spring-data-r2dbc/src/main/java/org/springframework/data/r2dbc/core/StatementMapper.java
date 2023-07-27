@@ -23,10 +23,7 @@ import org.springframework.data.r2dbc.convert.R2dbcConverter;
 import org.springframework.data.r2dbc.dialect.R2dbcDialect;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.CriteriaDefinition;
-import org.springframework.data.relational.core.sql.Expression;
-import org.springframework.data.relational.core.sql.LockMode;
-import org.springframework.data.relational.core.sql.SqlIdentifier;
-import org.springframework.data.relational.core.sql.Table;
+import org.springframework.data.relational.core.sql.*;
 import org.springframework.data.relational.core.sql.render.RenderContext;
 import org.springframework.lang.Nullable;
 import org.springframework.r2dbc.core.Parameter;
@@ -139,6 +136,10 @@ public interface StatementMapper {
 		return SelectSpec.create(table);
 	}
 
+	default SelectSpec createSelect(TableLike table) {
+		return SelectSpec.create(table);
+	}
+
 	/**
 	 * Create an {@code INSERT} specification for {@code table}.
 	 *
@@ -217,7 +218,7 @@ public interface StatementMapper {
 	 */
 	class SelectSpec {
 
-		private final Table table;
+		private final TableLike table;
 		private final List<String> projectedFields;
 		private final List<Expression> selectList;
 		private final @Nullable CriteriaDefinition criteria;
@@ -234,7 +235,7 @@ public interface StatementMapper {
 		private final Groups groups;
 
 
-		protected SelectSpec(Table table, List<String> projectedFields, List<Expression> selectList,
+		protected SelectSpec(TableLike table, List<String> projectedFields, List<Expression> selectList,
 							 @Nullable CriteriaDefinition criteria, Sort sort, int limit, long offset, boolean distinct, LockMode lockMode, @Nullable Joins joins, @Nullable Groups groups) {
 			this.table = table;
 			this.projectedFields = projectedFields;
@@ -267,14 +268,18 @@ public interface StatementMapper {
 		 * @since 1.1
 		 */
 		public static SelectSpec create(SqlIdentifier table) {
+			return create(Table.create(table));
+		}
+
+		public static SelectSpec create(TableLike table) {
 
 			List<String> projectedFields = Collections.emptyList();
 			List<Expression> selectList = Collections.emptyList();
-			return new SelectSpec(Table.create(table), projectedFields, selectList, Criteria.empty(), Sort.unsorted(), -1, -1,
+			return new SelectSpec(table, projectedFields, selectList, Criteria.empty(), Sort.unsorted(), -1, -1,
 					false, null, null, null);
 		}
 
-		public SelectSpec doWithTable(BiFunction<Table, SelectSpec, SelectSpec> function) {
+		public SelectSpec doWithTable(BiFunction<TableLike, SelectSpec, SelectSpec> function) {
 			return function.apply(getTable(), this);
 		}
 
@@ -452,7 +457,7 @@ public interface StatementMapper {
 			return this.lockMode;
 		}
 
-		public Table getTable() {
+		public TableLike getTable() {
 			return this.table;
 		}
 

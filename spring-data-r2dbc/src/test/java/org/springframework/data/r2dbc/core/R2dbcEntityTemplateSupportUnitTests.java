@@ -84,7 +84,7 @@ public class R2dbcEntityTemplateSupportUnitTests {
 
         StatementRecorder.RecordedStatement statement = recorder.getCreatedStatement(s -> s.startsWith("SELECT"));
 
-        assertThat(statement.getSql()).isEqualTo("SELECT COUNT(person.id) FROM person WHERE (person.THE_NAME = $1) AND ((person.THE_NAME >= $2 AND person.THE_NAME <= $3)) GROUP BY person.THE_NAME, person.date");
+        assertThat(statement.getSql()).isEqualTo("SELECT COUNT(1) FROM (SELECT COUNT(person.id) FROM person WHERE (person.THE_NAME = $1 AND ((person.THE_NAME >= $2 AND (person.THE_NAME <= $3)))) GROUP BY person.THE_NAME, person.date) person");
         assertThat(statement.getBindings()).hasSize(3).containsEntry(0, Parameter.from("Walter"))
                 .containsEntry(1, Parameter.from("0"))
                 .containsEntry(2, Parameter.from("2"));
