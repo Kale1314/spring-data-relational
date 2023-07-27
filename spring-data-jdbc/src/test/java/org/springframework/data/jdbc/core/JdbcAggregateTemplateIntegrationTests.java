@@ -88,6 +88,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @author Milan Milanov
  * @author Mikhail Polivakha
  * @author Chirag Tailor
+ * @author Vincent Galloy
  */
 @ContextConfiguration
 @Transactional
@@ -1082,6 +1083,18 @@ class JdbcAggregateTemplateIntegrationTests {
 		assertThat(template.findById(entity.id, WithInsertOnly.class).insertOnly).isEqualTo("first value");
 	}
 
+	@Test // GH-1460
+	@EnabledOnFeature(SUPPORTS_ARRAYS)
+	void readEnumArray() {
+
+		EnumArrayOwner entity = new EnumArrayOwner();
+		entity.digits = new Color[]{Color.BLUE};
+
+		template.save(entity);
+
+		assertThat(template.findById(entity.id, EnumArrayOwner.class).digits).isEqualTo(new Color[]{Color.BLUE});
+	}
+
 	private <T extends Number> void saveAndUpdateAggregateWithVersion(VersionedAggregate aggregate,
 			Function<Number, T> toConcreteNumber) {
 		saveAndUpdateAggregateWithVersion(aggregate, toConcreteNumber, 0);
@@ -1121,6 +1134,17 @@ class JdbcAggregateTemplateIntegrationTests {
 
 	private Long count(String tableName) {
 		return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM " + tableName, emptyMap(), Long.class);
+	}
+
+	enum Color {
+		BLUE
+	}
+
+	@Table("ARRAY_OWNER")
+	private static class EnumArrayOwner {
+		@Id Long id;
+
+		Color[] digits;
 	}
 
 	@Table("ARRAY_OWNER")

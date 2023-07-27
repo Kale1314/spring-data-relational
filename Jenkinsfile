@@ -9,7 +9,7 @@ pipeline {
 
 	triggers {
 		pollSCM 'H/10 * * * *'
-		upstream(upstreamProjects: "spring-data-commons/main", threshold: hudson.model.Result.SUCCESS)
+		upstream(upstreamProjects: "spring-data-commons/3.1.x", threshold: hudson.model.Result.SUCCESS)
 	}
 
 	options {
@@ -33,6 +33,7 @@ pipeline {
 
 			environment {
 				ARTIFACTORY = credentials("${p['artifactory.credentials']}")
+				TESTCONTAINERS_IMAGE_SUBSTITUTOR = 'org.springframework.data.ProxyImageNameSubstitutor'
 			}
 
 			steps {
@@ -61,6 +62,7 @@ pipeline {
 					options { timeout(time: 30, unit: 'MINUTES') }
 					environment {
 						ARTIFACTORY = credentials("${p['artifactory.credentials']}")
+						TESTCONTAINERS_IMAGE_SUBSTITUTOR = 'org.springframework.data.ProxyImageNameSubstitutor'
 					}
 					steps {
 						script {

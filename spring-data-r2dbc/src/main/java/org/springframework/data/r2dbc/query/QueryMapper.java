@@ -134,6 +134,8 @@ public class QueryMapper {
 
 		for (Sort.Order order : sort) {
 
+			SqlSort.validate(order);
+
 			OrderByField simpleOrderByField = createSimpleOrderByField(table, entity, order);
 			OrderByField orderBy = simpleOrderByField
 					.withNullHandling(order.getNullHandling());
@@ -141,13 +143,15 @@ public class QueryMapper {
 		}
 
 		return mappedOrder;
-
 	}
+
 
 
 	private OrderByField createSimpleOrderByField(TableLike table, RelationalPersistentEntity<?> entity, Sort.Order order) {
 
-		SqlSort.validate(order);
+		if (order instanceof SqlSort.SqlOrder sqlOrder && sqlOrder.isUnsafe()) {
+			return OrderByField.from(Expressions.just(sqlOrder.getProperty()));
+		}
 
 		Field field = createPropertyField(entity, SqlIdentifier.unquoted(order.getProperty()), this.mappingContext);
 		if (order instanceof SqlSort.SqlOrder sqlOrder) {
